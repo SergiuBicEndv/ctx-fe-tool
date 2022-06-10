@@ -1,9 +1,9 @@
 {
-  "name": "@ctx/create-ctx-fe",
+  "name": "create-ctx-app",
   "version": "0.0.1",
   "type": "module",
   "license": "MIT",
-  "author": "Evan You",
+  "author": "sergiubicendv",
   "bin": {
     "ctx-create-fe": "index.js",
     "ctxcfe": "index.js"
@@ -35,7 +35,7 @@
     "fs-extra": "^10.1.0",
     "vitest": "^0.14.2"
   },
-  "description": "## Scaffolding Your First CTX/Vite Project",
+  "description": "## Scaffolding Your First CTX/Vite FE Project",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

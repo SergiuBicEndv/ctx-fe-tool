@@ -1,5 +1,7 @@
 # create-vite
 
+- This repo is forked after the vite/package/create-vite and then modified accordingly for a PoC
+
 ## Scaffolding Your First CTX/Vite Project
 
 > **Compatibility Note:**
@@ -29,49 +31,22 @@ You can also directly specify the project name and the template you want to use 
 
 ```bash
 # npm 6.x
-npm create vite@latest my-vue-app --template vue
+npx create-ctx-app test-ctx-app --template react
 
 # npm 7+, extra double-dash is needed:
-npm create vite@latest my-vue-app -- --template vue
+npx create-ctx-app test-ctx-app --template react-ts
 
 # yarn
-yarn create vite my-vue-app --template vue
-
-# pnpm
-pnpm create vite my-vue-app -- --template vue
+yarn create-ctx-app test-ctx-app --template react
 ```
 
 Currently supported template presets include:
 
-- `vanilla`
-- `vanilla-ts`
-- `vue`
-- `vue-ts`
 - `react`
 - `react-ts`
-- `preact`
-- `preact-ts`
-- `lit`
-- `lit-ts`
-- `svelte`
-- `svelte-ts`
 
 You can use `.` for the project name to scaffold in the current directory.
 
-## Community Templates
+## Community Templates [ Original Forked ]
 
-create-vite is a tool to quickly start a project from a basic template for popular frameworks. Check out Awesome Vite for [community maintained templates](https://github.com/vitejs/awesome-vite#templates) that include other tools or target different frameworks. You can use a tool like [degit](https://github.com/Rich-Harris/degit) to scaffold your project with one of the templates.
-
-```bash
-npx degit user/project my-project
-cd my-project
-
-npm install
-npm run dev
-```
-
-If the project uses `main` as the default branch, suffix the project repo with `#main`
-
-```bash
-npx degit user/project#main my-project
-```
+create-vite is a tool to quickly start a project from a basic template for popular frameworks. Check out Awesome Vite for [community maintained templates](https://github.com/vitejs/awesome-vite#templates) that include other tools or target different frameworks.
