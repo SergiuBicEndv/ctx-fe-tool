@@ -1,72 +1,77 @@
-<p align="center">
-  <a href="https://vitejs.dev" target="_blank" rel="noopener noreferrer">
-    <img width="180" src="https://vitejs.dev/logo.svg" alt="Vite logo">
-  </a>
-</p>
-<br/>
-<p align="center">
-  <a href="https://npmjs.com/package/vite"><img src="https://img.shields.io/npm/v/vite.svg" alt="npm package"></a>
-  <a href="https://nodejs.org/en/about/releases/"><img src="https://img.shields.io/node/v/vite.svg" alt="node compatibility"></a>
-  <a href="https://github.com/vitejs/vite/actions/workflows/ci.yml"><img src="https://github.com/vitejs/vite/actions/workflows/ci.yml/badge.svg?branch=main" alt="build status"></a>
-  <a href="https://chat.vitejs.dev"><img src="https://img.shields.io/badge/chat-discord-blue?style=flat&logo=discord" alt="discord chat"></a>
-</p>
-<br/>
+# create-vite
 
-# Vite ⚡
+## Scaffolding Your First CTX/Vite Project
 
-> Next Generation Frontend Tooling
+> **Compatibility Note:**
+> Vite requires [Node.js](https://nodejs.org/en/) version >=14.6.0. However, some templates require a higher Node.js version to work, please upgrade if your package manager warns about it.
 
-- 💡 Instant Server Start
-- ⚡️ Lightning Fast HMR
-- 🛠️ Rich Features
-- 📦 Optimized Build
-- 🔩 Universal Plugin Interface
-- 🔑 Fully Typed APIs
+With NPM:
 
-Vite (French word for "quick", pronounced [`/vit/`](https://cdn.jsdelivr.net/gh/vitejs/vite@main/docs/public/vite.mp3), like "veet") is a new breed of frontend build tool that significantly improves the frontend development experience. It consists of two major parts:
+```bash
+$ npm create vite@latest
+```
 
-- A dev server that serves your source files over [native ES modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules), with [rich built-in features](https://vitejs.dev/guide/features.html) and astonishingly fast [Hot Module Replacement (HMR)](https://vitejs.dev/guide/features.html#hot-module-replacement).
+With Yarn:
 
-- A [build command](https://vitejs.dev/guide/build.html) that bundles your code with [Rollup](https://rollupjs.org), pre-configured to output highly optimized static assets for production.
+```bash
+$ yarn create vite
+```
 
-In addition, Vite is highly extensible via its [Plugin API](https://vitejs.dev/guide/api-plugin.html) and [JavaScript API](https://vitejs.dev/guide/api-javascript.html) with full typing support.
+With PNPM:
 
-[Read the Docs to Learn More](https://vitejs.dev).
+```bash
+$ pnpm create vite
+```
 
-## v3.0
+Then follow the prompts!
 
-Current Status: **Alpha** (for internal testing, not recommended for production)
+You can also directly specify the project name and the template you want to use via additional command line options. For example, to scaffold a Vite + Vue project, run:
 
-The `main` branch is now for v3.0, if you are looking for current stable releases, check the [`v2` branch](https://github.com/vitejs/vite/tree/v2) branch instead.
+```bash
+# npm 6.x
+npm create vite@latest my-vue-app --template vue
 
-We will start drafting release notes and migration guide for v3.0 when we enter the beta stage. Before that you can check:
+# npm 7+, extra double-dash is needed:
+npm create vite@latest my-vue-app -- --template vue
 
-- [v3.0 Milestone](https://github.com/vitejs/vite/milestone/5)
-- [Breaking Change List](https://github.com/vitejs/vite/issues?q=label%3A%22breaking+change%22+is%3Aclosed+milestone%3A3.0)
+# yarn
+yarn create vite my-vue-app --template vue
 
-## Packages
+# pnpm
+pnpm create vite my-vue-app -- --template vue
+```
 
-| Package                                           | Version (click for changelogs)                                                                                                       |
-| ------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------- |
-| [vite](packages/vite)                             | [![vite version](https://img.shields.io/npm/v/vite.svg?label=%20)](packages/vite/CHANGELOG.md)                                       |
-| [@vitejs/plugin-vue](packages/plugin-vue)         | [![plugin-vue version](https://img.shields.io/npm/v/@vitejs/plugin-vue.svg?label=%20)](packages/plugin-vue/CHANGELOG.md)             |
-| [@vitejs/plugin-vue-jsx](packages/plugin-vue-jsx) | [![plugin-vue-jsx version](https://img.shields.io/npm/v/@vitejs/plugin-vue-jsx.svg?label=%20)](packages/plugin-vue-jsx/CHANGELOG.md) |
-| [@vitejs/plugin-react](packages/plugin-react)     | [![plugin-react version](https://img.shields.io/npm/v/@vitejs/plugin-react.svg?label=%20)](packages/plugin-react/CHANGELOG.md)       |
-| [@vitejs/plugin-legacy](packages/plugin-legacy)   | [![plugin-legacy version](https://img.shields.io/npm/v/@vitejs/plugin-legacy.svg?label=%20)](packages/plugin-legacy/CHANGELOG.md)    |
-| [create-vite](packages/create-vite)               | [![create-vite version](https://img.shields.io/npm/v/create-vite.svg?label=%20)](packages/create-vite/CHANGELOG.md)                  |
+Currently supported template presets include:
 
-## Contribution
+- `vanilla`
+- `vanilla-ts`
+- `vue`
+- `vue-ts`
+- `react`
+- `react-ts`
+- `preact`
+- `preact-ts`
+- `lit`
+- `lit-ts`
+- `svelte`
+- `svelte-ts`
 
-See [Contributing Guide](https://github.com/vitejs/vite/blob/main/CONTRIBUTING.md).
+You can use `.` for the project name to scaffold in the current directory.
 
-## License
+## Community Templates
 
-MIT
+create-vite is a tool to quickly start a project from a basic template for popular frameworks. Check out Awesome Vite for [community maintained templates](https://github.com/vitejs/awesome-vite#templates) that include other tools or target different frameworks. You can use a tool like [degit](https://github.com/Rich-Harris/degit) to scaffold your project with one of the templates.
 
-## Sponsors
+```bash
+npx degit user/project my-project
+cd my-project
 
-<p align="center">
-  <a target="_blank" href="https://github.com/sponsors/yyx990803">
-    <img alt="sponsors" src="https://sponsors.vuejs.org/vite.svg">
-  </a>
-</p>
+npm install
+npm run dev
+```
+
+If the project uses `main` as the default branch, suffix the project repo with `#main`
+
+```bash
+npx degit user/project#main my-project
+```
