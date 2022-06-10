@@ -1,5 +1,5 @@
 {
-  "name": "create-ctx-fe",
+  "name": "@ctx/create-ctx-fe",
   "version": "0.0.1",
   "type": "module",
   "license": "MIT",
@@ -24,10 +24,22 @@
   "bugs": {
     "url": "https://github.com/SergiuBicEndv/ctx-fe-tool/issues"
   },
-  "homepage": "#readme",
+  "homepage": "http://#readme",
   "dependencies": {
     "kolorist": "^1.5.1",
     "minimist": "^1.2.6",
     "prompts": "^2.4.2"
-  }
+  },
+  "devDependencies": {
+    "execa": "^6.1.0",
+    "fs-extra": "^10.1.0",
+    "vitest": "^0.14.2"
+  },
+  "description": "## Scaffolding Your First CTX/Vite Project",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ctx"
+  ]
 }
