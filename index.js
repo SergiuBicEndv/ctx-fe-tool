@@ -36,6 +36,11 @@ const FRAMEWORKS = [
         name: 'react-ts',
         display: 'TypeScript',
         color: blue
+      },
+      {
+        name: 'react-ts-tailwind',
+        display: 'TypeScript + TailwindCSS',
+        color: cyan
       }
     ]
   }
