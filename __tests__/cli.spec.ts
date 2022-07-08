@@ -1,6 +1,5 @@
 import { join } from 'path'
-import type { ExecaSyncReturnValue, SyncOptions } from 'execa'
-import { commandSync } from 'execa'
+import { ExecaSyncReturnValue, SyncOptions, execaCommandSync } from 'execa'
 import { mkdirpSync, readdirSync, remove, writeFileSync } from 'fs-extra'
 import { afterEach, beforeAll, expect, test } from 'vitest'
 
@@ -13,7 +12,7 @@ const run = (
   args: string[],
   options: SyncOptions<string> = {}
 ): ExecaSyncReturnValue<string> => {
-  return commandSync(`node ${CLI_PATH} ${args.join(' ')}`, options)
+  return execaCommandSync(`node ${CLI_PATH} ${args.join(' ')}`, options)
 }
 
 // Helper to create a non-empty directory
@@ -26,8 +25,7 @@ const createNonEmptyDir = () => {
   writeFileSync(pkgJson, '{ "foo": "bar" }')
 }
 
-// Vue 3 starter template
-const templateFiles = readdirSync(join(CLI_PATH, 'ctx-template-fe-react'))
+const templateFiles = readdirSync(join(CLI_PATH, 'ctx-template-fe-react-ts'))
   // _gitignore is renamed to .gitignore
   .map((filePath) => (filePath === '_gitignore' ? '.gitignore' : filePath))
   .sort()
@@ -48,6 +46,7 @@ test('prompts for the framework if none supplied when target dir is current dire
 
 test('prompts for the framework if none supplied', () => {
   const { stdout } = run([projectName])
+  console.log(stdout)
   expect(stdout).toContain('Select a framework:')
 })
 
@@ -63,6 +62,11 @@ test('prompts for the framework on supplying an invalid template', () => {
   )
 })
 
+test('prompts for the framework on not supplying a value for --pkgman', () => {
+  const { stdout } = run([projectName, '--template', 'react-ts', '--pkgman'])
+  expect(stdout).toContain('Select a package manager:')
+})
+
 test('asks to overwrite non-empty target directory', () => {
   createNonEmptyDir()
   const { stdout } = run([projectName], { cwd: __dirname })
@@ -75,24 +79,17 @@ test('asks to overwrite non-empty current directory', () => {
   expect(stdout).toContain(`Current directory is not empty.`)
 })
 
-test('successfully scaffolds a project based on vue starter template', () => {
-  const { stdout } = run([projectName, '--template', 'vue'], {
-    cwd: __dirname
-  })
+test('successfully scaffolds a project based on react-ts starter template with all arguments provided', () => {
+  const { stdout } = run(
+    [projectName, '--template', 'react-ts', '--pkgman', 'yarn'],
+    {
+      cwd: __dirname
+    }
+  )
   const generatedFiles = readdirSync(genPath).sort()
 
   // Assertions
   expect(stdout).toContain(`Scaffolding project in ${genPath}`)
-  expect(templateFiles).toEqual(generatedFiles)
-})
-
-test('works with the -t alias', () => {
-  const { stdout } = run([projectName, '-t', 'vue'], {
-    cwd: __dirname
-  })
-  const generatedFiles = readdirSync(genPath).sort()
-
-  // Assertions
-  expect(stdout).toContain(`Scaffolding project in ${genPath}`)
-  expect(templateFiles).toEqual(generatedFiles)
+  expect(generatedFiles).toContain('.yarn')
+  expect(generatedFiles).toContain('.yarnrc.yml')
 })

@@ -1,16 +1,17 @@
 {
   "name": "create-ctx-app",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "type": "module",
   "license": "MIT",
   "author": "sergiubicendv",
   "bin": {
-    "ctx-create-fe": "index.js",
-    "ctxcfe": "index.js"
+    "create-ctx-app": "index.js",
+    "ctx-create-fe": "index.js"
   },
   "files": [
     "index.js",
-    "ctx-template-fe-*"
+    "ctx-template-fe-*",
+    "common"
   ],
   "main": "index.js",
   "engines": {
@@ -31,15 +32,38 @@
     "prompts": "^2.4.2"
   },
   "devDependencies": {
+    "@babel/types": "^7.18.4",
+    "@types/fs-extra": "^9.0.13",
+    "@types/minimist": "^1.2.2",
+    "@types/node": "^17.0.31",
+    "@types/prompts": "^2.4.0",
+    "eslint": "^8.17.0",
+    "eslint-define-config": "^1.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-node": "^11.1.0",
     "execa": "^6.1.0",
     "fs-extra": "^10.1.0",
+    "pnpm": "^7.1.9",
+    "prettier": "2.6.2",
+    "vite": "2.9.13",
+    "vitepress": "1.0.0-draft.8",
     "vitest": "^0.14.2"
   },
   "description": "## Scaffolding Your First CTX/Vite FE Project",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "preinstall": "npx only-allow pnpm",
+    "format": "prettier --write .",
+    "typecheck": "tsc -p scripts --noEmit",
+    "test": "run-s test-unit test-serve test-build",
+    "test-serve": "vitest run -c vitest.config.e2e.ts",
+    "test-build": "cross-env VITE_TEST_BUILD=1 vitest run -c vitest.config.e2e.ts",
+    "test-unit": "vitest run",
+    "test-docs": "pnpm run docs-build",
+    "debug-serve": "cross-env VITE_DEBUG_SERVE=1 vitest run -c vitest.config.e2e.ts",
+    "debug-build": "cross-env VITE_TEST_BUILD=1 VITE_PRESERVE_BUILD_ARTIFACTS=1 vitest run -c vitest.config.e2e.ts",
+    "docs": "vitepress dev docs",
+    "docs-build": "vitepress build docs",
+    "docs-serve": "vitepress serve docs"
   },
-  "keywords": [
-    "ctx"
-  ]
+  "packageManager": "pnpm@7.1.9"
 }

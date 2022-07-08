@@ -6,20 +6,12 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import minimist from 'minimist'
 import prompts from 'prompts'
-import {
-  blue,
-  cyan,
-  green,
-  lightRed,
-  magenta,
-  red,
-  reset,
-  yellow
-} from 'kolorist'
+import { blue, cyan, red, reset, yellow, green } from 'kolorist'
 
 // Avoids autoconversion to number of the project name by defining that the args
 // non associated with an option ( _ ) needs to be parsed as a string. See #4606
 const argv = minimist(process.argv.slice(2), { string: ['_'] })
+
 const cwd = process.cwd()
 
 const FRAMEWORKS = [
@@ -29,26 +21,37 @@ const FRAMEWORKS = [
     variants: [
       {
         name: 'react',
-        display: 'JavaScript',
+        display: 'React',
         color: yellow
       },
       {
         name: 'react-ts',
-        display: 'TypeScript',
+        display: 'React + TypeScript',
         color: blue
       },
       {
         name: 'react-ts-tailwind',
-        display: 'TypeScript + TailwindCSS',
+        display: 'TSX + TailwindCSS',
         color: cyan
+      },
+      {
+        name: 'redux',
+        display: 'TSX + Redux',
+        color: green
       }
     ]
   }
 ]
 
+// @TODO: Add support to get pkg manager info from env, (npx, yarn dlx, pnpm create)
+// const pkgInfo = pkgFromUserAgent(process.env.npm_config_user_agent)
+// const pkgManager = pkgInfo ? pkgInfo.name : 'yarn'
+
 const TEMPLATES = FRAMEWORKS.map(
   (f) => (f.variants && f.variants.map((v) => v.name)) || [f.name]
 ).reduce((a, b) => a.concat(b), [])
+
+const SUPPORTED_PACKAGE_MANAGERS = ['yarn', 'pnpm', 'npm']
 
 const renameFiles = {
   _gitignore: '.gitignore'
@@ -57,6 +60,8 @@ const renameFiles = {
 async function init() {
   let targetDir = formatTargetDir(argv._[0])
   let template = argv.template || argv.t
+  let pkgManager = argv.pkgman
+  console.log(argv)
 
   const defaultTargetDir = 'ctx-template-fe-react'
   const getProjectName = () =>
@@ -77,6 +82,7 @@ async function init() {
           }
         },
         {
+          // @ts-ignore
           type: () =>
             !fs.existsSync(targetDir) || isEmpty(targetDir) ? null : 'confirm',
           name: 'overwrite',
@@ -87,7 +93,8 @@ async function init() {
             ` is not empty. Remove existing files and continue?`
         },
         {
-          type: (_, { overwrite } = {}) => {
+          // @ts-ignore
+          type: (_, { overwrite }) => {
             if (overwrite === false) {
               throw new Error(red('✖') + ' Operation cancelled')
             }
@@ -96,9 +103,11 @@ async function init() {
           name: 'overwriteChecker'
         },
         {
+          // @ts-ignore
           type: () => (isValidPackageName(getProjectName()) ? null : 'text'),
           name: 'packageName',
           message: reset('Package name:'),
+          // @ts-ignore
           initial: () => toValidPackageName(getProjectName()),
           validate: (dir) =>
             isValidPackageName(dir) || 'Invalid package.json name'
@@ -113,6 +122,7 @@ async function init() {
                 )
               : reset('Select a framework:'),
           initial: 0,
+          // @ts-ignore
           choices: FRAMEWORKS.map((framework) => {
             const frameworkColor = framework.color
             return {
@@ -122,6 +132,7 @@ async function init() {
           })
         },
         {
+          // @ts-ignore
           type: (framework) =>
             framework && framework.variants ? 'select' : null,
           name: 'variant',
@@ -131,10 +142,24 @@ async function init() {
             framework.variants.map((variant) => {
               const variantColor = variant.color
               return {
-                title: variantColor(variant.name),
+                title: variantColor(variant.display),
                 value: variant.name
               }
             })
+        },
+        {
+          type:
+            pkgManager && SUPPORTED_PACKAGE_MANAGERS.includes(pkgManager)
+              ? null
+              : 'select',
+          name: 'pkgman',
+          message: reset('Select a package manager:'),
+          // @ts-ignore
+          choices: () =>
+            SUPPORTED_PACKAGE_MANAGERS.map((pkg) => ({
+              title: `${pkg} ${pkg === 'yarn' ? '(Recommended)' : ''}`,
+              value: pkg
+            }))
         }
       ],
       {
@@ -149,7 +174,7 @@ async function init() {
   }
 
   // user choice associated with prompts
-  const { framework, overwrite, packageName, variant } = result
+  const { framework, overwrite, packageName, variant, pkgman } = result
 
   const root = path.join(cwd, targetDir)
 
@@ -159,8 +184,9 @@ async function init() {
     fs.mkdirSync(root, { recursive: true })
   }
 
-  // determine template
+  // determine template and pkg manager
   template = variant || framework || template
+  pkgManager = pkgman || pkgManager || SUPPORTED_PACKAGE_MANAGERS[0]
 
   console.log(`\nScaffolding project in ${root}...`)
 
@@ -170,47 +196,74 @@ async function init() {
     `ctx-template-fe-${template}`
   )
 
-  const write = (file, content) => {
+  const commonDir = path.resolve(fileURLToPath(import.meta.url), '..', `common`)
+
+  const write = (file, content, isCommon) => {
     const targetPath = renameFiles[file]
       ? path.join(root, renameFiles[file])
       : path.join(root, file)
     if (content) {
       fs.writeFileSync(targetPath, content)
     } else {
-      copy(path.join(templateDir, file), targetPath)
+      copy(path.join(isCommon ? commonDir : templateDir, file), targetPath)
     }
   }
 
-  const files = fs.readdirSync(templateDir)
-  for (const file of files.filter((f) => f !== 'package.json')) {
+  const templateFiles = fs.readdirSync(templateDir)
+
+  for (const file of templateFiles.filter((f) => f !== 'package.json')) {
     write(file)
   }
 
+  //@TODO: the cli should be extracted as a dependency.
+  const commonFiles = fs.readdirSync(commonDir).filter((f) => {
+    let negativeVals = ['package.json']
+
+    if (pkgManager !== 'yarn') {
+      negativeVals.push('.yarnrc.yml', '.yarn')
+    }
+
+    return !negativeVals.includes(f)
+  })
+
+  for (const file of commonFiles) {
+    const IS_COMMON = true
+    write(file, undefined, IS_COMMON)
+  }
+
+  // Start pakage.json modify
   const pkg = JSON.parse(
     fs.readFileSync(path.join(templateDir, `package.json`), 'utf-8')
   )
 
+  // Common package.json contains all scripts and dependencies
+  // that should be added by default in all templates
+  const commonPkg = JSON.parse(
+    fs.readFileSync(path.join(commonDir, `package.json`), 'utf-8')
+  )
+
   pkg.name = packageName || getProjectName()
+  pkg.devDependencies = { ...pkg.devDependencies, ...commonPkg.devDependencies }
+  pkg.prettier = commonPkg.prettier
+  pkg.xo = commonPkg.xo
+  pkg.engines = commonPkg.engines
+  pkg.scripts = {
+    preinstall: `npx only-allow ${pkgManager}`,
+    ...commonPkg.scripts
+  }
+
+  if (pkgManager === 'yarn') {
+    pkg.engines = { ...pkg.engines, yarn: '>=3.2.1' }
+  }
 
   write('package.json', JSON.stringify(pkg, null, 2))
-
-  const pkgInfo = pkgFromUserAgent(process.env.npm_config_user_agent)
-  const pkgManager = pkgInfo ? pkgInfo.name : 'npm'
 
   console.log(`\nDone. Now run:\n`)
   if (root !== cwd) {
     console.log(`  cd ${path.relative(cwd, root)}`)
   }
-  switch (pkgManager) {
-    case 'yarn':
-      console.log('  yarn')
-      console.log('  yarn dev')
-      break
-    default:
-      console.log(`  ${pkgManager} install`)
-      console.log(`  ${pkgManager} run dev`)
-      break
-  }
+  console.log(`  ${pkgManager} install`)
+  console.log(`  ${pkgManager} run dev`)
   console.log()
 }
 
@@ -218,6 +271,8 @@ async function init() {
  * @param {string | undefined} targetDir
  */
 function formatTargetDir(targetDir) {
+  if (targetDir === undefined) return ''
+
   return targetDir?.trim().replace(/\/+$/g, '')
 }
 
@@ -288,6 +343,7 @@ function emptyDir(dir) {
  * @param {string | undefined} userAgent process.env.npm_config_user_agent
  * @returns object | undefined
  */
+// @ts-ignore
 function pkgFromUserAgent(userAgent) {
   if (!userAgent) return undefined
   const pkgSpec = userAgent.split(' ')[0]

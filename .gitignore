@@ -13,3 +13,8 @@ node_modules
 playground-temp
 temp
 TODOs.md
+#common
+/common/.yarn/cache
+/common/.yarn/unplugged
+/common/.yarn/install-state.gz
+test-app

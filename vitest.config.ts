@@ -6,7 +6,8 @@ export default defineConfig({
       '**/node_modules/**',
       '**/dist/**',
       './playground/**/*.*',
-      './playground-temp/**/*.*'
+      './playground-temp/**/*.*',
+      './ctx-template-fe-*/**/*.*'
     ],
     testTimeout: 20000
   },
