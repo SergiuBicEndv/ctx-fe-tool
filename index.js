@@ -14,42 +14,9 @@ const argv = minimist(process.argv.slice(2), { string: ['_'] })
 
 const cwd = process.cwd()
 
-const FRAMEWORKS = [
-  {
-    name: 'react',
-    color: cyan,
-    variants: [
-      {
-        name: 'react',
-        display: 'React',
-        color: yellow
-      },
-      {
-        name: 'react-ts',
-        display: 'React + TypeScript',
-        color: blue
-      },
-      {
-        name: 'react-ts-tailwind',
-        display: 'TSX + TailwindCSS',
-        color: cyan
-      },
-      {
-        name: 'redux',
-        display: 'TSX + Redux',
-        color: green
-      }
-    ]
-  }
-]
-
 // @TODO: Add support to get pkg manager info from env, (npx, yarn dlx, pnpm create)
 // const pkgInfo = pkgFromUserAgent(process.env.npm_config_user_agent)
 // const pkgManager = pkgInfo ? pkgInfo.name : 'yarn'
-
-const TEMPLATES = FRAMEWORKS.map(
-  (f) => (f.variants && f.variants.map((v) => v.name)) || [f.name]
-).reduce((a, b) => a.concat(b), [])
 
 const SUPPORTED_PACKAGE_MANAGERS = ['yarn', 'pnpm', 'npm']
 
@@ -113,6 +80,12 @@ async function init() {
             isValidPackageName(dir) || 'Invalid package.json name'
         },
         {
+          type: 'text',
+          name: 'framework',
+          message: 'Framework:',
+          initial: 'react-ts',
+        },
+        {
           type: 'multiselect',
           name: 'features',
           message: 'Pick the features that you want to include in your project',
@@ -122,41 +95,6 @@ async function init() {
             { title: 'React Router', value: 'router' },
             { title: 'E2E (Cypress)', value: 'cypress' }
           ],
-        },
-        { // @TODO: React should be selected by default
-          type: template && TEMPLATES.includes(template) ? null : 'select',
-          name: 'framework',
-          message:
-            typeof template === 'string' && !TEMPLATES.includes(template)
-              ? reset(
-                  `"${template}" isn't a valid template. Please choose from below: `
-                )
-              : reset('Select a framework:'),
-          initial: 0,
-          // @ts-ignore
-          choices: FRAMEWORKS.map((framework) => {
-            const frameworkColor = framework.color
-            return {
-              title: frameworkColor(framework.name),
-              value: framework
-            }
-          })
-        },
-        { // @TODO: Remove after geting values from multiselect
-          // @ts-ignore
-          type: (framework) =>
-            framework && framework.variants ? 'select' : null,
-          name: 'variant',
-          message: reset('Select a variant:'),
-          // @ts-ignore
-          choices: (framework) =>
-            framework.variants.map((variant) => {
-              const variantColor = variant.color
-              return {
-                title: variantColor(variant.display),
-                value: variant.name
-              }
-            })
         },
         {
           type:
@@ -185,7 +123,7 @@ async function init() {
   }
 
   // user choice associated with prompts
-  const { framework, overwrite, packageName, variant, pkgman } = result
+  const { framework, overwrite, packageName, pkgman, features } = result
 
   const root = path.join(cwd, targetDir)
 
@@ -196,7 +134,8 @@ async function init() {
   }
 
   // determine template and pkg manager
-  template = variant || framework || template
+  const featureTemplate = features.join('-');
+  template = featureTemplate || framework || template
   pkgManager = pkgman || pkgManager || SUPPORTED_PACKAGE_MANAGERS[0]
 
   console.log(`\nScaffolding project in ${root}...`)
