@@ -113,6 +113,17 @@ async function init() {
             isValidPackageName(dir) || 'Invalid package.json name'
         },
         {
+          type: 'multiselect',
+          name: 'features',
+          message: 'Pick the features that you want to include in your project',
+          choices: [
+            { title: 'Redux', value: 'redux' },
+            { title: 'TailwindCSS', value: 'tailwind' },
+            { title: 'React Router', value: 'router' },
+            { title: 'E2E (Cypress)', value: 'cypress' }
+          ],
+        },
+        { // @TODO: React should be selected by default
           type: template && TEMPLATES.includes(template) ? null : 'select',
           name: 'framework',
           message:
@@ -131,7 +142,7 @@ async function init() {
             }
           })
         },
-        {
+        { // @TODO: Remove after geting values from multiselect
           // @ts-ignore
           type: (framework) =>
             framework && framework.variants ? 'select' : null,
