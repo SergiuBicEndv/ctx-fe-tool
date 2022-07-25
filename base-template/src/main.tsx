@@ -1,7 +1,7 @@
 import reportWebVitals from '../report-web-vitals';
-import App from './app';
+import App from './App';
 import React from 'react';
-import {createRoot} from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 import './index.css';
 
 const container = document.querySelector('#root')!;
@@ -9,7 +9,7 @@ const root = createRoot(container);
 
 root.render(
 	<React.StrictMode>
-			<App/>
+		<App />
 	</React.StrictMode>,
 );
 

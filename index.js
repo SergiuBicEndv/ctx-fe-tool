@@ -11,12 +11,6 @@ import { red, reset } from 'kolorist'
 // Avoids autoconversion to number of the project name by defining that the args
 // non associated with an option ( _ ) needs to be parsed as a string. See #4606
 const argv = minimist(process.argv.slice(2), { string: ['_'] })
-const listFeatures = {
-  tailwind: 'tailwind',
-  redux: 'redux',
-  router: 'router',
-  e2e: 'cypress',
-}
 
 const cwd = process.cwd()
 
@@ -32,12 +26,11 @@ const renameFiles = {
 
 async function init() {
   let targetDir = formatTargetDir(argv._[0])
-  let plugins = [];
-  let template = 'react-ts' //'argv.template || argv.t'
+  let template = argv.template || argv.t
   let pkgManager = argv.pkgman
   console.log(argv)
 
-  const defaultTargetDir = 'ctx-template-fe-react'
+  const defaultTargetDir = 'base-template'
   const getProjectName = () =>
     targetDir === '.' ? path.basename(path.resolve()) : targetDir
 
@@ -94,7 +87,7 @@ async function init() {
         },
         {
           type: 'multiselect',
-          name: 'features',
+          name: 'plugins',
           message: 'Pick the features that you want to include in your project',
           choices: [
             { title: 'Redux', value: 'redux' },
@@ -131,8 +124,9 @@ async function init() {
   }
 
   // user choice associated with prompts
-  const { framework, overwrite, packageName, variant, pkgman, features } = result
+  const { framework, overwrite, packageName, pkgman, plugins } = result
 
+  //root = where the files are written
   const root = path.join(cwd, targetDir)
 
   if (overwrite) {
@@ -141,13 +135,41 @@ async function init() {
     fs.mkdirSync(root, { recursive: true })
   }
 
-  // Feature TailwindCSS -> Todo - forEach instead for each feature
-  if (features.includes(listFeatures.tailwind))
-    console.log("working")
+  //1. copy base files
+  //2. copy plugins files
+  //3. merge base, plugins files(package.json)
+  const baseDir = path.resolve(
+    fileURLToPath(import.meta.url),
+    '..',
+    `base-template`
+  )
+  //@TODO: the cli should be extracted as a dependency.
+  const commonFiles = fs.readdirSync(baseDir).filter((f) => {
+    let negativeVals = ['package.json']
+
+    if (pkgManager !== 'yarn') {
+      negativeVals.push('.yarnrc.yml', '.yarn')
+    }
+
+    return !negativeVals.includes(f)
+  })
+  const write = (file, content, pluginDir) => {
+    const targetPath = renameFiles[file]
+      ? path.join(root, renameFiles[file])
+      : path.join(root, file)
+    if (content) {
+      fs.writeFileSync(targetPath, content)
+    } else {
+      copy(path.join(pluginDir ? pluginDir : baseDir, file), targetPath)
+    }
+  }
+  //1. copy base files
+  for (const file of commonFiles) {
+    write(file)
+  }
 
   // determine template and pkg manager
-  plugins = [...features] || []
-  template = variant || framework || template
+  template = framework || template
   pkgManager = pkgman || pkgManager || SUPPORTED_PACKAGE_MANAGERS[0]
 
   console.log(`\nScaffolding project in ${root}...`)
@@ -159,52 +181,26 @@ async function init() {
     `plugin-${plugin}`
   )
 
-  // it will always be the base TSX template
-  const templateDir = path.resolve(
-    fileURLToPath(import.meta.url),
-    '..',
-    `ctx-template-fe-react-ts`
-  )
+  //2. copy plugins files
+  for (const plugin of plugins) {
+    const pluginPath = pluginDir(plugin);
+    const pluginFiles = fs.readdirSync(pluginPath)
 
-  const baseDir = path.resolve(fileURLToPath(import.meta.url), '..', `base-template`)
-
-  const write = (file, content, isCommon) => {
-    const targetPath = renameFiles[file]
-      ? path.join(root, renameFiles[file])
-      : path.join(root, file)
-    if (content) {
-      fs.writeFileSync(targetPath, content)
-    } else {
-      copy(path.join(isCommon ? baseDir : templateDir, file), targetPath)
+    for (const file of pluginFiles.filter((f) => f !== 'package.json')) {
+      write(file, undefined, pluginPath)
     }
   }
 
-  const templateFiles = fs.readdirSync(templateDir)
-
-  for (const file of templateFiles.filter((f) => f !== 'package.json')) {
-    write(file)
-  }
-
-  //@TODO: the cli should be extracted as a dependency.
-  const commonFiles = fs.readdirSync(baseDir).filter((f) => {
-    let negativeVals = ['package.json']
-
-    if (pkgManager !== 'yarn') {
-      negativeVals.push('.yarnrc.yml', '.yarn')
+  //3. merge base, plugins package.json files
+  let pkg = {};
+  for (const plugin of plugins) {
+    const packagePath = path.join(pluginDir(plugin), `package.json`);
+    let temp = {};
+    if (fs.existsSync(packagePath)) {
+      temp = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
     }
-
-    return !negativeVals.includes(f)
-  })
-
-  for (const file of commonFiles) {
-    const IS_COMMON = true
-    write(file, undefined, IS_COMMON)
+    pkg = mergeDeep(pkg, temp)
   }
-
-  // Start pakage.json modify
-  const pkg = JSON.parse(
-    fs.readFileSync(path.join(templateDir, `package.json`), 'utf-8')
-  )
 
   // Common package.json contains all scripts and dependencies
   // that should be added by default in all templates
@@ -213,6 +209,7 @@ async function init() {
   )
 
   pkg.name = packageName || getProjectName()
+  pkg.dependencies = { ...pkg.dependencies, ...commonPkg.dependencies }
   pkg.devDependencies = { ...pkg.devDependencies, ...commonPkg.devDependencies }
   pkg.prettier = commonPkg.prettier
   pkg.xo = commonPkg.xo
@@ -327,3 +324,25 @@ function pkgFromUserAgent(userAgent) {
 init().catch((e) => {
   console.error(e)
 })
+
+function isObject(item) {
+  return (item && typeof item === 'object' && !Array.isArray(item));
+}
+
+function mergeDeep(target, ...sources) {
+  if (!sources.length) return target;
+  const source = sources.shift();
+
+  if (isObject(target) && isObject(source)) {
+    for (const key in source) {
+      if (isObject(source[key])) {
+        if (!target[key]) Object.assign(target, { [key]: {} });
+        mergeDeep(target[key], source[key]);
+      } else {
+        Object.assign(target, { [key]: source[key] });
+      }
+    }
+  }
+
+  return mergeDeep(target, ...sources);
+}
