@@ -197,7 +197,6 @@ async function init() {
 
 
   // Start pakage.json modify
-
   const pkg = JSON.parse(
     fs.readFileSync(path.join(baseDir, `package.json`), 'utf-8')
   )
@@ -207,6 +206,10 @@ async function init() {
   // that should be added by default in all templates
   const commonPkg = JSON.parse(
     fs.readFileSync(path.join(baseDir, `package.json`), 'utf-8')
+  )
+
+  const pluginTailwindPkg = JSON.parse(
+    fs.readFileSync(path.join(pluginDir(listFeatures.tailwind), `package.json`), 'utf-8')
   )
 
   pkg.name = packageName || getProjectName()
@@ -220,13 +223,11 @@ async function init() {
   }
 
   if (pkgManager === 'yarn') {
-    pkg.engines = { ...pkg.engines, yarn: '>=3.2.1' }
+    pkg.engines = { ...pkg.engines, yarn: '>=1.22' }
   }
 
   if (features.includes(listFeatures.tailwind)){
-    pkg.devDependencies = {...pkg.devDependencies, autoprefixer: "^10.4.7",
-    postcss: "^8.4.14",
-    tailwindcss: "^3.1.4"}
+    pkg.devDependencies = {...pkg.devDependencies, ...pluginTailwindPkg.devDependencies}
   }
 
 
