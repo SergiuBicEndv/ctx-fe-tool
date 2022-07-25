@@ -6,11 +6,17 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import minimist from 'minimist'
 import prompts from 'prompts'
-import { blue, cyan, red, reset, yellow, green } from 'kolorist'
+import { red, reset } from 'kolorist'
 
 // Avoids autoconversion to number of the project name by defining that the args
 // non associated with an option ( _ ) needs to be parsed as a string. See #4606
 const argv = minimist(process.argv.slice(2), { string: ['_'] })
+const listFeatures = {
+  tailwind: 'tailwind',
+  redux: 'redux',
+  router: 'router',
+  e2e: 'cypress',
+}
 
 const cwd = process.cwd()
 
@@ -26,7 +32,8 @@ const renameFiles = {
 
 async function init() {
   let targetDir = formatTargetDir(argv._[0])
-  let template = argv.template || argv.t
+  let plugins = [];
+  let template = 'react-ts' //'argv.template || argv.t'
   let pkgManager = argv.pkgman
   console.log(argv)
 
@@ -95,6 +102,7 @@ async function init() {
             { title: 'React Router', value: 'router' },
             { title: 'E2E (Cypress)', value: 'cypress' }
           ],
+          instructions: '\n📘 - Press <space> to select, <a> to select all or <Enter> to submit.',
         },
         {
           type:
@@ -123,7 +131,7 @@ async function init() {
   }
 
   // user choice associated with prompts
-  const { framework, overwrite, packageName, pkgman, features } = result
+  const { framework, overwrite, packageName, variant, pkgman, features } = result
 
   const root = path.join(cwd, targetDir)
 
@@ -133,20 +141,32 @@ async function init() {
     fs.mkdirSync(root, { recursive: true })
   }
 
+  // Feature TailwindCSS -> Todo - forEach instead for each feature
+  if (features.includes(listFeatures.tailwind))
+    console.log("working")
+
   // determine template and pkg manager
-  const featureTemplate = features.join('-');
-  template = featureTemplate || framework || template
+  plugins = [...features] || []
+  template = variant || framework || template
   pkgManager = pkgman || pkgManager || SUPPORTED_PACKAGE_MANAGERS[0]
 
   console.log(`\nScaffolding project in ${root}...`)
 
+  // used to dynamically check for different plugins
+  const pluginDir = (plugin) => path.resolve(
+    fileURLToPath(import.meta.url),
+    '..',
+    `plugin-${plugin}`
+  )
+
+  // it will always be the base TSX template
   const templateDir = path.resolve(
     fileURLToPath(import.meta.url),
     '..',
-    `ctx-template-fe-${template}`
+    `ctx-template-fe-react-ts`
   )
 
-  const commonDir = path.resolve(fileURLToPath(import.meta.url), '..', `common`)
+  const baseDir = path.resolve(fileURLToPath(import.meta.url), '..', `base-template`)
 
   const write = (file, content, isCommon) => {
     const targetPath = renameFiles[file]
@@ -155,7 +175,7 @@ async function init() {
     if (content) {
       fs.writeFileSync(targetPath, content)
     } else {
-      copy(path.join(isCommon ? commonDir : templateDir, file), targetPath)
+      copy(path.join(isCommon ? baseDir : templateDir, file), targetPath)
     }
   }
 
@@ -166,7 +186,7 @@ async function init() {
   }
 
   //@TODO: the cli should be extracted as a dependency.
-  const commonFiles = fs.readdirSync(commonDir).filter((f) => {
+  const commonFiles = fs.readdirSync(baseDir).filter((f) => {
     let negativeVals = ['package.json']
 
     if (pkgManager !== 'yarn') {
@@ -189,7 +209,7 @@ async function init() {
   // Common package.json contains all scripts and dependencies
   // that should be added by default in all templates
   const commonPkg = JSON.parse(
-    fs.readFileSync(path.join(commonDir, `package.json`), 'utf-8')
+    fs.readFileSync(path.join(baseDir, `package.json`), 'utf-8')
   )
 
   pkg.name = packageName || getProjectName()
