@@ -26,7 +26,7 @@ const renameFiles = {
 
 async function init() {
   let targetDir = formatTargetDir(argv._[0])
-  let template = argv.template || argv.t
+  let plugins = argv.plugins || argv.t
   let pkgManager = argv.pkgman
   console.log(argv)
 
@@ -87,7 +87,7 @@ async function init() {
         },
         {
           type: 'multiselect',
-          name: 'plugins',
+          name: 'features',
           message: 'Pick the features that you want to include in your project',
           choices: [
             { title: 'Redux', value: 'redux' },
@@ -95,7 +95,9 @@ async function init() {
             { title: 'React Router', value: 'router' },
             { title: 'E2E (Cypress)', value: 'cypress' }
           ],
-          instructions: '\n📘 - Press <space> to select, <a> to select all or <Enter> to submit.',
+          instructions: `\n📘 - Press <space> to select, <a> to select all or <Enter> to submit.\n
+          TIP: Don't select any if you want just React-TSX (base)
+          `,
         },
         {
           type:
@@ -124,7 +126,7 @@ async function init() {
   }
 
   // user choice associated with prompts
-  const { framework, overwrite, packageName, pkgman, plugins } = result
+  const { framework, overwrite, packageName, pkgman, features } = result
 
   //root = where the files are written
   const root = path.join(cwd, targetDir)
@@ -153,23 +155,23 @@ async function init() {
 
     return !negativeVals.includes(f)
   })
-  const write = (file, content, pluginDir) => {
+  const write = (dir, file, content) => {
     const targetPath = renameFiles[file]
       ? path.join(root, renameFiles[file])
       : path.join(root, file)
     if (content) {
       fs.writeFileSync(targetPath, content)
     } else {
-      copy(path.join(pluginDir ? pluginDir : baseDir, file), targetPath)
+      copy(path.join(dir, file), targetPath)
     }
   }
   //1. copy base files
   for (const file of commonFiles) {
-    write(file)
+    write(baseDir, file)
   }
 
   // determine template and pkg manager
-  template = framework || template
+  plugins = features || plugins || []
   pkgManager = pkgman || pkgManager || SUPPORTED_PACKAGE_MANAGERS[0]
 
   console.log(`\nScaffolding project in ${root}...`)
@@ -187,7 +189,7 @@ async function init() {
     const pluginFiles = fs.readdirSync(pluginPath)
 
     for (const file of pluginFiles.filter((f) => f !== 'package.json')) {
-      write(file, undefined, pluginPath)
+      write(pluginPath, file)
     }
   }
 
@@ -202,6 +204,7 @@ async function init() {
     pkg.dependencies = { ...pkg.dependencies, ...temp.dependencies }
     pkg.devDependencies = { ...pkg.devDependencies, ...temp.devDependencies }
   }
+
 
   // Common package.json contains all scripts and dependencies
   // that should be added by default in all templates
@@ -221,10 +224,11 @@ async function init() {
   }
 
   if (pkgManager === 'yarn') {
-    pkg.engines = { ...pkg.engines, yarn: '>=3.2.1' }
+    pkg.engines = { ...pkg.engines, yarn: '>=1.22' }
   }
 
-  write('package.json', JSON.stringify(pkg, null, 2))
+
+  write(baseDir, 'package.json', JSON.stringify(pkg, null, 2))
 
   console.log(`\nDone. Now run:\n`)
   if (root !== cwd) {
