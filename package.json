@@ -51,7 +51,6 @@
   },
   "description": "## Scaffolding Your First CTX/Vite FE Project",
   "scripts": {
-    "preinstall": "npx only-allow pnpm",
     "format": "prettier --write .",
     "typecheck": "tsc -p scripts --noEmit",
     "test": "run-s test-unit test-serve test-build",
