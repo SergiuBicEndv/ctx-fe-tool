@@ -1,0 +1,11 @@
+{
+  "name": "plugin-redux",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@reduxjs/toolkit": "^1.8.2",
+    "react-redux": "^8.0.2"
+  },
+	"devDependencies": {}
+}

@@ -6,17 +6,11 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import minimist from 'minimist'
 import prompts from 'prompts'
-import { red, reset} from 'kolorist'
+import { red, reset } from 'kolorist'
 
 // Avoids autoconversion to number of the project name by defining that the args
 // non associated with an option ( _ ) needs to be parsed as a string. See #4606
 const argv = minimist(process.argv.slice(2), { string: ['_'] })
-const listFeatures = {
-  tailwind: 'tailwind',
-  redux: 'redux',
-  router: 'router',
-  e2e: 'cypress',
-}
 
 const cwd = process.cwd()
 
@@ -32,12 +26,11 @@ const renameFiles = {
 
 async function init() {
   let targetDir = formatTargetDir(argv._[0])
-  let plugins = [];
-  let template = 'react-ts' //'argv.template || argv.t'
+  let plugins = argv.plugins || argv.t
   let pkgManager = argv.pkgman
   console.log(argv)
 
-  const defaultTargetDir = 'ctx-template-fe-react'
+  const defaultTargetDir = 'base-template'
   const getProjectName = () =>
     targetDir === '.' ? path.basename(path.resolve()) : targetDir
 
@@ -87,11 +80,17 @@ async function init() {
             isValidPackageName(dir) || 'Invalid package.json name'
         },
         {
+          type: 'text',
+          name: 'framework',
+          message: 'Framework:',
+          initial: 'react-ts',
+        },
+        {
           type: 'multiselect',
           name: 'features',
           message: 'Pick the features that you want to include in your project',
           choices: [
-            { title: 'Redux', value: 'redux'},
+            { title: 'Redux', value: 'redux' },
             { title: 'TailwindCSS', value: 'tailwind' },
             { title: 'React Router', value: 'router' },
             { title: 'E2E (Cypress)', value: 'cypress' }
@@ -127,8 +126,9 @@ async function init() {
   }
 
   // user choice associated with prompts
-  const { framework, overwrite, packageName, variant, pkgman, features } = result
+  const { framework, overwrite, packageName, pkgman, features } = result
 
+  //root = where the files are written
   const root = path.join(cwd, targetDir)
 
   if (overwrite) {
@@ -137,9 +137,41 @@ async function init() {
     fs.mkdirSync(root, { recursive: true })
   }
 
+  //1. copy base files
+  //2. copy plugins files
+  //3. merge base, plugins files(package.json)
+  const baseDir = path.resolve(
+    fileURLToPath(import.meta.url),
+    '..',
+    `base-template`
+  )
+  //@TODO: the cli should be extracted as a dependency.
+  const commonFiles = fs.readdirSync(baseDir).filter((f) => {
+    let negativeVals = ['package.json']
+
+    if (pkgManager !== 'yarn') {
+      negativeVals.push('.yarnrc.yml', '.yarn')
+    }
+
+    return !negativeVals.includes(f)
+  })
+  const write = (dir, file, content) => {
+    const targetPath = renameFiles[file]
+      ? path.join(root, renameFiles[file])
+      : path.join(root, file)
+    if (content) {
+      fs.writeFileSync(targetPath, content)
+    } else {
+      copy(path.join(dir, file), targetPath)
+    }
+  }
+  //1. copy base files
+  for (const file of commonFiles) {
+    write(baseDir, file)
+  }
+
   // determine template and pkg manager
-  plugins = [...features] || []
-  template = variant || framework || template
+  plugins = features || plugins || []
   pkgManager = pkgman || pkgManager || SUPPORTED_PACKAGE_MANAGERS[0]
 
   console.log(`\nScaffolding project in ${root}...`)
@@ -151,55 +183,27 @@ async function init() {
     `plugin-${plugin}`
   )
 
-  const baseDir = path.resolve(fileURLToPath(import.meta.url), '..', `base-template`)
+  //2. copy plugins files
+  for (const plugin of plugins) {
+    const pluginPath = pluginDir(plugin);
+    const pluginFiles = fs.readdirSync(pluginPath)
 
-  const write = (dir, file, content) => {
-    const targetPath = renameFiles[file]
-      ? path.join(root, renameFiles[file])
-      : path.join(root, file)
-    if (content) {
-      fs.writeFileSync(targetPath, content)
-    } else {
-      copy(path.join(dir, file), targetPath)
+    for (const file of pluginFiles.filter((f) => f !== 'package.json')) {
+      write(pluginPath, file)
     }
   }
 
-  const templateFiles = fs.readdirSync(baseDir)
-
-  for (const file of templateFiles.filter((f) => f !== 'package.json')) {
-    write(baseDir, file)
-  }
-
-  //@TODO: the cli should be extracted as a dependency.
-  const commonFiles = fs.readdirSync(baseDir).filter((f) => {
-    let negativeVals = ['package.json']
-
-    if (pkgManager !== 'yarn') {
-      negativeVals.push('.yarnrc.yml', '.yarn')
+  //3. merge base, plugins package.json files
+  let pkg = {};
+  for (const plugin of plugins) {
+    const packagePath = path.join(pluginDir(plugin), `package.json`);
+    let temp = {};
+    if (fs.existsSync(packagePath)) {
+      temp = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
     }
-
-    return !negativeVals.includes(f)
-  })
-
-  for (const file of commonFiles) {
-    write(baseDir, file, undefined)
+    pkg.dependencies = { ...pkg.dependencies, ...temp.dependencies }
+    pkg.devDependencies = { ...pkg.devDependencies, ...temp.devDependencies }
   }
-
-    // Feature TailwindCSS -> Todo - forEach instead for each feature
-    const tailwindCssFiles = fs.readdirSync(pluginDir(listFeatures.tailwind))
-
-    if (features.includes(listFeatures.tailwind))
-    {
-      for (const file of tailwindCssFiles.filter((f) => f !== 'package.json')) {
-        write(pluginDir(listFeatures.tailwind),file)
-      }
-    }
-
-
-  // Start pakage.json modify
-  const pkg = JSON.parse(
-    fs.readFileSync(path.join(baseDir, `package.json`), 'utf-8')
-  )
 
 
   // Common package.json contains all scripts and dependencies
@@ -208,11 +212,8 @@ async function init() {
     fs.readFileSync(path.join(baseDir, `package.json`), 'utf-8')
   )
 
-  const pluginTailwindPkg = JSON.parse(
-    fs.readFileSync(path.join(pluginDir(listFeatures.tailwind), `package.json`), 'utf-8')
-  )
-
   pkg.name = packageName || getProjectName()
+  pkg.dependencies = { ...pkg.dependencies, ...commonPkg.dependencies }
   pkg.devDependencies = { ...pkg.devDependencies, ...commonPkg.devDependencies }
   pkg.prettier = commonPkg.prettier
   pkg.xo = commonPkg.xo
@@ -224,10 +225,6 @@ async function init() {
 
   if (pkgManager === 'yarn') {
     pkg.engines = { ...pkg.engines, yarn: '>=1.22' }
-  }
-
-  if (features.includes(listFeatures.tailwind)){
-    pkg.devDependencies = {...pkg.devDependencies, ...pluginTailwindPkg.devDependencies}
   }
 
 
@@ -332,3 +329,6 @@ function pkgFromUserAgent(userAgent) {
 init().catch((e) => {
   console.error(e)
 })
+
+
+
