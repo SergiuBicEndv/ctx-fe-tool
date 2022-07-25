@@ -199,7 +199,8 @@ async function init() {
     if (fs.existsSync(packagePath)) {
       temp = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
     }
-    pkg = mergeDeep(pkg, temp)
+    pkg.dependencies = { ...pkg.dependencies, ...temp.dependencies }
+    pkg.devDependencies = { ...pkg.devDependencies, ...temp.devDependencies }
   }
 
   // Common package.json contains all scripts and dependencies
@@ -325,24 +326,5 @@ init().catch((e) => {
   console.error(e)
 })
 
-function isObject(item) {
-  return (item && typeof item === 'object' && !Array.isArray(item));
-}
 
-function mergeDeep(target, ...sources) {
-  if (!sources.length) return target;
-  const source = sources.shift();
 
-  if (isObject(target) && isObject(source)) {
-    for (const key in source) {
-      if (isObject(source[key])) {
-        if (!target[key]) Object.assign(target, { [key]: {} });
-        mergeDeep(target[key], source[key]);
-      } else {
-        Object.assign(target, { [key]: source[key] });
-      }
-    }
-  }
-
-  return mergeDeep(target, ...sources);
-}
