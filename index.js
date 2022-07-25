@@ -96,7 +96,9 @@ async function init() {
             { title: 'React Router', value: 'router' },
             { title: 'E2E (Cypress)', value: 'cypress' }
           ],
-          instructions: '\n📘 - Press <space> to select, <a> to select all or <Enter> to submit.',
+          instructions: `\n📘 - Press <space> to select, <a> to select all or <Enter> to submit.\n
+          TIP: Don't select any if you want just React-TSX (base)
+          `,
         },
         {
           type:
@@ -135,10 +137,6 @@ async function init() {
     fs.mkdirSync(root, { recursive: true })
   }
 
-  // Feature TailwindCSS -> Todo - forEach instead for each feature
-  if (features.includes(listFeatures.tailwind))
-  console.log("working")
-
   // determine template and pkg manager
   plugins = [...features] || []
   template = variant || framework || template
@@ -153,30 +151,23 @@ async function init() {
     `plugin-${plugin}`
   )
 
-  // it will always be the base TSX template
-  const templateDir = path.resolve(
-    fileURLToPath(import.meta.url),
-    '..',
-    `ctx-template-fe-react-ts`
-  )
-
   const baseDir = path.resolve(fileURLToPath(import.meta.url), '..', `base-template`)
 
-  const write = (file, content, isCommon) => {
+  const write = (dir, file, content) => {
     const targetPath = renameFiles[file]
       ? path.join(root, renameFiles[file])
       : path.join(root, file)
     if (content) {
       fs.writeFileSync(targetPath, content)
     } else {
-      copy(path.join(isCommon ? baseDir : templateDir, file), targetPath)
+      copy(path.join(dir, file), targetPath)
     }
   }
 
-  const templateFiles = fs.readdirSync(templateDir)
+  const templateFiles = fs.readdirSync(baseDir)
 
   for (const file of templateFiles.filter((f) => f !== 'package.json')) {
-    write(file)
+    write(baseDir, file)
   }
 
   //@TODO: the cli should be extracted as a dependency.
@@ -191,14 +182,26 @@ async function init() {
   })
 
   for (const file of commonFiles) {
-    const IS_COMMON = true
-    write(file, undefined, IS_COMMON)
+    write(baseDir, file, undefined)
   }
 
+    // Feature TailwindCSS -> Todo - forEach instead for each feature
+    const tailwindCssFiles = fs.readdirSync(pluginDir(listFeatures.tailwind))
+
+    if (features.includes(listFeatures.tailwind))
+    {
+      for (const file of tailwindCssFiles.filter((f) => f !== 'package.json')) {
+        write(pluginDir(listFeatures.tailwind),file)
+      }
+    }
+
+
   // Start pakage.json modify
+
   const pkg = JSON.parse(
-    fs.readFileSync(path.join(templateDir, `package.json`), 'utf-8')
+    fs.readFileSync(path.join(baseDir, `package.json`), 'utf-8')
   )
+
 
   // Common package.json contains all scripts and dependencies
   // that should be added by default in all templates
@@ -220,7 +223,14 @@ async function init() {
     pkg.engines = { ...pkg.engines, yarn: '>=3.2.1' }
   }
 
-  write('package.json', JSON.stringify(pkg, null, 2))
+  if (features.includes(listFeatures.tailwind)){
+    pkg.devDependencies = {...pkg.devDependencies, autoprefixer: "^10.4.7",
+    postcss: "^8.4.14",
+    tailwindcss: "^3.1.4"}
+  }
+
+
+  write(baseDir, 'package.json', JSON.stringify(pkg, null, 2))
 
   console.log(`\nDone. Now run:\n`)
   if (root !== cwd) {
