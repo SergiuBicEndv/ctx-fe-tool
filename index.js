@@ -6,50 +6,23 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import minimist from 'minimist'
 import prompts from 'prompts'
-import { blue, cyan, red, reset, yellow, green } from 'kolorist'
+import { red, reset} from 'kolorist'
 
 // Avoids autoconversion to number of the project name by defining that the args
 // non associated with an option ( _ ) needs to be parsed as a string. See #4606
 const argv = minimist(process.argv.slice(2), { string: ['_'] })
+const listFeatures = {
+  tailwind: 'tailwind',
+  redux: 'redux',
+  router: 'router',
+  e2e: 'cypress',
+}
 
 const cwd = process.cwd()
-
-const FRAMEWORKS = [
-  {
-    name: 'react',
-    color: cyan,
-    variants: [
-      {
-        name: 'react',
-        display: 'React',
-        color: yellow
-      },
-      {
-        name: 'react-ts',
-        display: 'React + TypeScript',
-        color: blue
-      },
-      {
-        name: 'react-ts-tailwind',
-        display: 'TSX + TailwindCSS',
-        color: cyan
-      },
-      {
-        name: 'redux',
-        display: 'TSX + Redux',
-        color: green
-      }
-    ]
-  }
-]
 
 // @TODO: Add support to get pkg manager info from env, (npx, yarn dlx, pnpm create)
 // const pkgInfo = pkgFromUserAgent(process.env.npm_config_user_agent)
 // const pkgManager = pkgInfo ? pkgInfo.name : 'yarn'
-
-const TEMPLATES = FRAMEWORKS.map(
-  (f) => (f.variants && f.variants.map((v) => v.name)) || [f.name]
-).reduce((a, b) => a.concat(b), [])
 
 const SUPPORTED_PACKAGE_MANAGERS = ['yarn', 'pnpm', 'npm']
 
@@ -59,7 +32,8 @@ const renameFiles = {
 
 async function init() {
   let targetDir = formatTargetDir(argv._[0])
-  let template = argv.template || argv.t
+  let plugins = [];
+  let template = 'react-ts' //'argv.template || argv.t'
   let pkgManager = argv.pkgman
   console.log(argv)
 
@@ -117,46 +91,12 @@ async function init() {
           name: 'features',
           message: 'Pick the features that you want to include in your project',
           choices: [
-            { title: 'Redux', value: 'redux' },
+            { title: 'Redux', value: 'redux'},
             { title: 'TailwindCSS', value: 'tailwind' },
             { title: 'React Router', value: 'router' },
             { title: 'E2E (Cypress)', value: 'cypress' }
           ],
-        },
-        { // @TODO: React should be selected by default
-          type: template && TEMPLATES.includes(template) ? null : 'select',
-          name: 'framework',
-          message:
-            typeof template === 'string' && !TEMPLATES.includes(template)
-              ? reset(
-                  `"${template}" isn't a valid template. Please choose from below: `
-                )
-              : reset('Select a framework:'),
-          initial: 0,
-          // @ts-ignore
-          choices: FRAMEWORKS.map((framework) => {
-            const frameworkColor = framework.color
-            return {
-              title: frameworkColor(framework.name),
-              value: framework
-            }
-          })
-        },
-        { // @TODO: Remove after geting values from multiselect
-          // @ts-ignore
-          type: (framework) =>
-            framework && framework.variants ? 'select' : null,
-          name: 'variant',
-          message: reset('Select a variant:'),
-          // @ts-ignore
-          choices: (framework) =>
-            framework.variants.map((variant) => {
-              const variantColor = variant.color
-              return {
-                title: variantColor(variant.display),
-                value: variant.name
-              }
-            })
+          instructions: '\n📘 - Press <space> to select, <a> to select all or <Enter> to submit.',
         },
         {
           type:
@@ -185,7 +125,7 @@ async function init() {
   }
 
   // user choice associated with prompts
-  const { framework, overwrite, packageName, variant, pkgman } = result
+  const { framework, overwrite, packageName, variant, pkgman, features } = result
 
   const root = path.join(cwd, targetDir)
 
@@ -195,19 +135,32 @@ async function init() {
     fs.mkdirSync(root, { recursive: true })
   }
 
+  // Feature TailwindCSS -> Todo - forEach instead for each feature
+  if (features.includes(listFeatures.tailwind))
+  console.log("working")
+
   // determine template and pkg manager
+  plugins = [...features] || []
   template = variant || framework || template
   pkgManager = pkgman || pkgManager || SUPPORTED_PACKAGE_MANAGERS[0]
 
   console.log(`\nScaffolding project in ${root}...`)
 
+  // used to dynamically check for different plugins
+  const pluginDir = (plugin) => path.resolve(
+    fileURLToPath(import.meta.url),
+    '..',
+    `plugin-${plugin}`
+  )
+
+  // it will always be the base TSX template
   const templateDir = path.resolve(
     fileURLToPath(import.meta.url),
     '..',
-    `ctx-template-fe-${template}`
+    `ctx-template-fe-react-ts`
   )
 
-  const commonDir = path.resolve(fileURLToPath(import.meta.url), '..', `common`)
+  const baseDir = path.resolve(fileURLToPath(import.meta.url), '..', `base-template`)
 
   const write = (file, content, isCommon) => {
     const targetPath = renameFiles[file]
@@ -216,7 +169,7 @@ async function init() {
     if (content) {
       fs.writeFileSync(targetPath, content)
     } else {
-      copy(path.join(isCommon ? commonDir : templateDir, file), targetPath)
+      copy(path.join(isCommon ? baseDir : templateDir, file), targetPath)
     }
   }
 
@@ -227,7 +180,7 @@ async function init() {
   }
 
   //@TODO: the cli should be extracted as a dependency.
-  const commonFiles = fs.readdirSync(commonDir).filter((f) => {
+  const commonFiles = fs.readdirSync(baseDir).filter((f) => {
     let negativeVals = ['package.json']
 
     if (pkgManager !== 'yarn') {
@@ -250,7 +203,7 @@ async function init() {
   // Common package.json contains all scripts and dependencies
   // that should be added by default in all templates
   const commonPkg = JSON.parse(
-    fs.readFileSync(path.join(commonDir, `package.json`), 'utf-8')
+    fs.readFileSync(path.join(baseDir, `package.json`), 'utf-8')
   )
 
   pkg.name = packageName || getProjectName()
