@@ -92,7 +92,7 @@ async function init() {
           choices: [
             { title: 'Redux', value: 'redux' },
             { title: 'TailwindCSS', value: 'tailwind' },
-            { title: 'React Router', value: 'router' },
+            { title: 'React Router', value: 'react-router' },
             { title: 'E2E (Cypress)', value: 'cypress' }
           ],
           instructions: `\n📘 - Press <space> to select, <a> to select all or <Enter> to submit.\n
