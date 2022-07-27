@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import viteLogo from '/assets/vite.svg';
 import reactLogo from '/assets/react.svg';
 import reactRouterLogo from '/assets/reactRouter.svg';
-import { Link } from 'react-router-dom';
+
 const Layout = () => {
   return (
     <div>
@@ -40,4 +41,5 @@ const Layout = () => {
     </div>
   );
 };
+
 export default Layout;
