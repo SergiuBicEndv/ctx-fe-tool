@@ -28,7 +28,6 @@ async function init() {
   let targetDir = formatTargetDir(argv._[0])
   let plugins = argv.plugins || argv.t
   let pkgManager = argv.pkgman
-  console.log(argv)
 
   const defaultTargetDir = 'base-template'
   const getProjectName = () =>
@@ -80,19 +79,23 @@ async function init() {
             isValidPackageName(dir) || 'Invalid package.json name'
         },
         {
-          type: 'text',
-          name: 'framework',
-          message: 'Framework:',
-          initial: 'react-ts',
+          type: 'select',
+          name: 'template',
+          message: 'Pick the base template:',
+          choices: [
+            {title: 'React TSX', value: 'base-template'},
+          ],
+          min: 1,
         },
         {
           type: 'multiselect',
           name: 'features',
           message: 'Pick the features that you want to include in your project',
           choices: [
+            { title: 'Authentification (AWS Cognito)', value: 'auth'},
             { title: 'Redux', value: 'redux' },
             { title: 'TailwindCSS', value: 'tailwind' },
-            { title: 'React Router', value: 'router' },
+            { title: 'React Router', value: 'router'},
             { title: 'E2E (Cypress)', value: 'cypress' }
           ],
           instructions: `\n📘 - Press <space> to select, <a> to select all or <Enter> to submit.\n
@@ -126,7 +129,7 @@ async function init() {
   }
 
   // user choice associated with prompts
-  const { framework, overwrite, packageName, pkgman, features } = result
+  const { template, overwrite, packageName, pkgman, features } = result
 
   //root = where the files are written
   const root = path.join(cwd, targetDir)
@@ -137,14 +140,16 @@ async function init() {
     fs.mkdirSync(root, { recursive: true })
   }
 
-  //1. copy base files
-  //2. copy plugins files
-  //3. merge base, plugins files(package.json)
+  //0. Determine the base template
   const baseDir = path.resolve(
     fileURLToPath(import.meta.url),
     '..',
-    `base-template`
+    `${template}`
   )
+  //1. copy base files
+  //2. copy plugins files
+  //3. merge base, plugins files(package.json)
+
   //@TODO: the cli should be extracted as a dependency.
   const commonFiles = fs.readdirSync(baseDir).filter((f) => {
     let negativeVals = ['package.json']
