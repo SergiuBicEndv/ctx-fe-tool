@@ -25,6 +25,6 @@ dist-ssr
 .pnp.loader.mjs
 .yarn/cache
 
-# env files
+# env vars
 .env
 .env.*

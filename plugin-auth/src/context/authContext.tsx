@@ -62,7 +62,7 @@ const AuthProvider = ({ children }: Props) => {
         })
         window.localStorage.setItem('accessToken', `${session.accessToken.jwtToken}`)
         window.localStorage.setItem('refreshToken', `${session.refreshToken.token}`)
-        await setAttribute({ Name: 'website', Value: 'https://github.com/dbroadhurst/aws-cognito-react' })
+        // await setAttribute({ Name: 'website', Value: 'https://github.com/dbroadhurst/aws-cognito-react' })
         const attr: any = await getAttributes()
         setAttrInfo(attr)
         setAuthStatus(AuthStatus.SignedIn)

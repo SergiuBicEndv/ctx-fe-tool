@@ -95,7 +95,7 @@ async function init() {
             { title: 'Authentification (AWS Cognito)', value: 'auth'},
             { title: 'Redux', value: 'redux' },
             { title: 'TailwindCSS', value: 'tailwind' },
-            { title: 'React Router', value: 'router'},
+            { title: 'React Router', value: 'react-router' },
             { title: 'E2E (Cypress)', value: 'cypress' }
           ],
           instructions: `\n📘 - Press <space> to select, <a> to select all or <Enter> to submit.\n
@@ -188,10 +188,16 @@ async function init() {
     `plugin-${plugin}`
   )
 
+
   //2. copy plugins files
+  if(['react-router','auth'].every(value => plugins.includes(value)))
+  plugins = plugins.filter(plugin => plugin !== 'react-router')
+
   for (const plugin of plugins) {
+
     const pluginPath = pluginDir(plugin);
     const pluginFiles = fs.readdirSync(pluginPath)
+
 
     for (const file of pluginFiles.filter((f) => f !== 'package.json')) {
       write(pluginPath, file)
