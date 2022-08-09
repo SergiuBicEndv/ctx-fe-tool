@@ -10,3 +10,5 @@ playground/html/invalid.html
 playground/worker/classic-worker.js
 ctx-template-fe-*
 common
+plugin-*
+base-template
