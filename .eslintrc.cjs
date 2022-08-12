@@ -42,18 +42,6 @@ module.exports = defineConfig({
         tryExtensions: ['.ts', '.js', '.jsx', '.tsx', '.d.ts']
       }
     ],
-    'node/no-restricted-require': [
-      'error',
-      Object.keys(require('./packages/vite/package.json').devDependencies).map(
-        (d) => ({
-          name: d,
-          message:
-            `devDependencies can only be imported using ESM syntax so ` +
-            `that they are included in the rollup bundle. If you are trying to ` +
-            `lazy load a dependency, use (await import('dependency')).default instead.`
-        })
-      )
-    ],
     'node/no-extraneous-import': [
       'error',
       {

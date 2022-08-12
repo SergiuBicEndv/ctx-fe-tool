@@ -35,7 +35,7 @@ module.exports = plop => {
 			},
 			{
 				type: 'add',
-				path: 'src/components/{{kebabCase name}}/index.js',
+				path: 'src/components/{{kebabCase name}}/index.ts',
 				templateFile: 'cli/templates/components/index.js.hbs',
 			},
 			{
@@ -44,13 +44,13 @@ module.exports = plop => {
 				path: 'src/components/index.ts',
 				// Pattern tells plop where in the file to inject the template
 				pattern: `/* CLI_INJECT_IMPORT */`,
-				template: `import {{kebabCase name}} from './{{kebabCase name}}';`,
+				template: `import {{pascalCase name}} from './{{kebabCase name}}';`,
 			},
 			{
 				type: 'append',
 				path: 'src/components/index.ts',
 				pattern: `/* CLI_INJECT_EXPORT */`,
-				template: `{{kebabCase name}},`,
+				template: `{{pascalCase name}},`,
 			},
 		],
 	});

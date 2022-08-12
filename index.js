@@ -7,6 +7,11 @@ import { fileURLToPath } from 'url'
 import minimist from 'minimist'
 import prompts from 'prompts'
 import { red, reset } from 'kolorist'
+import nodePlop from 'node-plop'
+
+const plop = await nodePlop(
+  path.resolve(fileURLToPath(import.meta.url), '..', `plopfile.cjs`)
+)
 
 // Avoids autoconversion to number of the project name by defining that the args
 // non associated with an option ( _ ) needs to be parsed as a string. See #4606
@@ -28,7 +33,6 @@ async function init() {
   let targetDir = formatTargetDir(argv._[0])
   let plugins = argv.plugins || argv.t
   let pkgManager = argv.pkgman
-  console.log(argv)
 
   const defaultTargetDir = 'base-template'
   const getProjectName = () =>
@@ -80,24 +84,16 @@ async function init() {
             isValidPackageName(dir) || 'Invalid package.json name'
         },
         {
-          type: 'text',
-          name: 'framework',
-          message: 'Framework:',
-          initial: 'react-ts',
-        },
-        {
           type: 'multiselect',
           name: 'features',
           message: 'Pick the features that you want to include in your project',
           choices: [
             { title: 'Redux', value: 'redux' },
             { title: 'TailwindCSS', value: 'tailwind' },
-            { title: 'React Router', value: 'react-router' },
+            { title: 'React Router', value: 'router' },
             { title: 'E2E (Cypress)', value: 'cypress' }
           ],
-          instructions: `\n📘 - Press <space> to select, <a> to select all or <Enter> to submit.\n
-          TIP: Don't select any if you want just React-TSX (base)
-          `,
+          hint: `\nTip: Press Enter to scaffold base template only...\n`
         },
         {
           type:
@@ -126,7 +122,7 @@ async function init() {
   }
 
   // user choice associated with prompts
-  const { framework, overwrite, packageName, pkgman, features } = result
+  const { overwrite, packageName, pkgman, features } = result
 
   //root = where the files are written
   const root = path.join(cwd, targetDir)
@@ -145,16 +141,21 @@ async function init() {
     '..',
     `base-template`
   )
-  //@TODO: the cli should be extracted as a dependency.
-  const commonFiles = fs.readdirSync(baseDir).filter((f) => {
-    let negativeVals = ['package.json']
+  //@TODO: the generator should be extracted as a dependency.
+  const getCommonFiles = () => {
+    const files = fs.readdirSync(baseDir).filter((f) => {
+      const negativeVals = ['package.json']
 
-    if (pkgManager !== 'yarn') {
-      negativeVals.push('.yarnrc.yml', '.yarn')
-    }
+      if (pkgManager !== 'yarn' && pkgman !== 'yarn') {
+        negativeVals.push('.yarnrc.yml', '.yarn')
+      }
 
-    return !negativeVals.includes(f)
-  })
+      return !negativeVals.includes(f)
+    })
+
+    return files;
+  }
+
   const write = (dir, file, content) => {
     const targetPath = renameFiles[file]
       ? path.join(root, renameFiles[file])
@@ -165,7 +166,9 @@ async function init() {
       copy(path.join(dir, file), targetPath)
     }
   }
-  //1. copy base files
+
+  const commonFiles = getCommonFiles();
+
   for (const file of commonFiles) {
     write(baseDir, file)
   }
@@ -177,27 +180,21 @@ async function init() {
   console.log(`\nScaffolding project in ${root}...`)
 
   // used to dynamically check for different plugins
-  const pluginDir = (plugin) => path.resolve(
-    fileURLToPath(import.meta.url),
-    '..',
-    `plugin-${plugin}`
-  )
+  const getPluginDir = (plugin) =>
+    path.resolve(fileURLToPath(import.meta.url), '..', `plugin-${plugin}`)
 
-  //2. copy plugins files
+  const pkg = {}
+
   for (const plugin of plugins) {
-    const pluginPath = pluginDir(plugin);
+    const pluginPath = getPluginDir(plugin)
     const pluginFiles = fs.readdirSync(pluginPath)
 
     for (const file of pluginFiles.filter((f) => f !== 'package.json')) {
       write(pluginPath, file)
     }
-  }
 
-  //3. merge base, plugins package.json files
-  let pkg = {};
-  for (const plugin of plugins) {
-    const packagePath = path.join(pluginDir(plugin), `package.json`);
-    let temp = {};
+    const packagePath = path.join(getPluginDir(plugin), `package.json`)
+    let temp = {}
     if (fs.existsSync(packagePath)) {
       temp = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
     }
@@ -205,6 +202,12 @@ async function init() {
     pkg.devDependencies = { ...pkg.devDependencies, ...temp.devDependencies }
   }
 
+  if (plugins.length > 0 && (plugins.includes('redux') || plugins.includes('router'))) {
+    // We can use this pattern if we need to inject code in our template files.
+    plop
+      .getGenerator('providers')
+      .runActions({ providers: plugins, targetDir: root })
+  }
 
   // Common package.json contains all scripts and dependencies
   // that should be added by default in all templates
@@ -224,9 +227,9 @@ async function init() {
   }
 
   if (pkgManager === 'yarn') {
-    pkg.engines = { ...pkg.engines, yarn: '>=1.22' }
+    pkg.scripts = { postinstall: 'yarn dlx @yarnpkg/sdks vscode', ...pkg.scripts }
+    pkg.engines = { ...pkg.engines, yarn: '>=3.2.3' }
   }
-
 
   write(baseDir, 'package.json', JSON.stringify(pkg, null, 2))
 
@@ -329,6 +332,3 @@ function pkgFromUserAgent(userAgent) {
 init().catch((e) => {
   console.error(e)
 })
-
-
-
