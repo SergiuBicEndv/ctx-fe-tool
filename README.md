@@ -1,34 +1,35 @@
-# create-vite
+# A App template
 
-- This repo is forked after the vite/package/create-vite and then modified accordingly for a PoC
+This is the CTX App template based on [Vite](https://vitejs.dev/guide/#scaffolding-your-first-vite-project).
 
-## Scaffolding Your First CTX/Vite Project
+## Prerequisites
 
-> **Compatibility Note:**
-> Vite requires [Node.js](https://nodejs.org/en/) version >=14.6.0. However, some templates require a higher Node.js version to work, please upgrade if your package manager warns about it.
+- `node` 14.15.0 or higher.
+- `npm` or `yarn` 1.22 or higher.
+- Github personal access token. (Needed to install adi-ctx dependencies.)
 
-You can also directly specify the project name and the template you want to use via additional command line options. For example, to scaffold a Vite + React CTX project, run:
+## Getting started
 
-```bash
-# npm 6.x
-npx create-ctx-app test-ctx-app --template react
+Before installing the dependencies, you need to create a global environment variable with the key `GITHUB_PERSONAL_ACCESS_TOKEN`. It's value should be the generated personal access token from Github. For more information on how to generate this token refer to <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token"> Creating a personal access token on Github. </a>
 
-# npm 7+, extra double-dash is needed:
-npx create-ctx-app test-ctx-app --template react-ts
+Once the env var is defined, install the project's depenencies:
 
-# yarn
-yarn create-ctx-app test-ctx-app --template react
+```
+yarn install
 ```
 
-Currently supported template presets include:
+To start the dev server:
 
-- `react`
-- `react-ts`
-- `react-ts-tailwind`
-- `redux`
+```
+yarn dev
+```
 
-You can use `.` for the project name to scaffold in the current directory.
+## IDE CONFIGURATION
 
-## Community Templates [ Original Forked ]
+The templates use Yarn 3 with PnP enabled, and is configured and optimized to be used with VSCODE. If you are using a different IDE, you may need to do some manual configuration, specially for Yarn PnP to work smoothly. If you are having issues with types and dependencies not being recognized, please refer to https://yarnpkg.com/getting-started/editor-sdks to setup your editor correctly.
 
-create-vite is a tool to quickly start a project from a basic template for popular frameworks. Check out Awesome Vite for [community maintained templates](https://github.com/vitejs/awesome-vite#templates) that include other tools or target different frameworks.
+Note: For safety reason VSCode requires you to explicitly activate the custom TS settings. A prompt should be displayed to allow the use of the workspace version of typescript. If the prompt is not displayed, you can enable it by following this steps:
+
+```
+ctrl+shift+p >> "Select Typescript Version" >> "Use Workspace Version"
+```
