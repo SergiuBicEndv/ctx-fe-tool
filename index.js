@@ -88,7 +88,7 @@ async function init() {
           name: 'features',
           message: 'Pick the features that you want to include in your project',
           choices: [
-            { title: 'Authentification (AWS Cognito)', value: 'auth' },
+            { title: 'Authentication (AWS Cognito)', value: 'auth' },
             { title: 'Redux', value: 'redux' },
             { title: 'TailwindCSS', value: 'tailwind' },
             { title: 'React Router', value: 'router' },
