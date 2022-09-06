@@ -29,28 +29,20 @@ module.exports = plop => {
 			},
 			{
 				type: 'add',
+				path: 'src/components/{{kebabCase name}}/index.ts',
+				templateFile: 'cli/templates/components/index.js.hbs',
+			},
+			{
+				type: 'add',
 				path: 'src/components/index.ts',
 				templateFile: 'cli/templates/components/injectable-index.js.hbs',
 				skipIfExists: true,
 			},
 			{
-				type: 'add',
-				path: 'src/components/{{kebabCase name}}/index.js',
-				templateFile: 'cli/templates/components/index.js.hbs',
-			},
-			{
-				// Action type 'append' injects a template into an existing file
-				type: 'append',
-				path: 'src/components/index.ts',
-				// Pattern tells plop where in the file to inject the template
-				pattern: `/* CLI_INJECT_IMPORT */`,
-				template: `import {{kebabCase name}} from './{{kebabCase name}}';`,
-			},
-			{
 				type: 'append',
 				path: 'src/components/index.ts',
 				pattern: `/* CLI_INJECT_EXPORT */`,
-				template: `{{kebabCase name}},`,
+				template: `export { default as {{ pascalCase name }} } from './{{ kebabCase name }}';`,
 			},
 		],
 	});

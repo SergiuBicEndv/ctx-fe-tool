@@ -1,11 +1,8 @@
 {
 	"extends": [
 		"xo",
+    "xo-typescript",
 		"xo-react",
 		"plugin:react/jsx-runtime"
-	],
-	"browser": true,
-	"env": {
-		"jest/globals": true
-	}
+	]
 }

@@ -1,15 +1,32 @@
-import { useHistory } from 'react-router-dom'
-import styles from './header.module.css'
+import {useNavigate} from 'react-router-dom';
+import {useAuthContext} from '../../hooks/use-auth-context';
+import {signOut} from '../../libs/cognito';
+import styles from './header.module.css';
 
 export const Header = () => {
-  const history = useHistory()
-  const signIn = () => {
-    history.push('/signin')
-  }
+	const navigate = useNavigate();
+	const {setAuthenticated, isAuthenticated} = useAuthContext();
 
-  return (
-    <div className={styles.Header}>
-      <button onClick={signIn}> Sign In </button>
-    </div>
-  )
-}
+	const onClickSignIn = () => {
+		navigate('/signin');
+	};
+
+	const onClickSignOut = async () => {
+		const res = await signOut();
+
+		if (res === 'success') {
+			setAuthenticated?.(false);
+			navigate('/');
+		}
+	};
+
+	return (
+		<div className={styles.Header}>
+			{isAuthenticated ? (
+				<button onClick={onClickSignOut}> Sign Out </button>
+			) : (
+				<button onClick={onClickSignIn}> Sign In </button>
+			)}
+		</div>
+	);
+};

@@ -1,15 +1,14 @@
+import {SignUpInput} from '../components/auth/register/register';
 import {
 	AuthenticationDetails,
 	CognitoUser,
 	CognitoUserAttribute,
 	CognitoUserPool,
+	CognitoUserSession,
 } from 'amazon-cognito-identity-js';
 
 const userPoolId = import.meta.env.VITE_USERPOOL_ID;
 const clientId = import.meta.env.VITE_CLIENT_ID;
-
-console.log(`userpool id=${userPoolId}`);
-console.log(`client id=${clientId}`);
 
 const poolData = {
 	UserPoolId: `${userPoolId}`,
@@ -18,7 +17,7 @@ const poolData = {
 
 const userPool: CognitoUserPool = new CognitoUserPool(poolData);
 
-let currentUser: any = userPool.getCurrentUser();
+let currentUser = userPool.getCurrentUser();
 
 export function getCurrentUser() {
 	return currentUser;
@@ -39,24 +38,51 @@ export async function getSession() {
 		currentUser = userPool.getCurrentUser();
 	}
 
-	return new Promise(function (resolve, reject) {
-		currentUser.getSession(function (err: any, session: any) {
-			if (err) {
-				reject(err);
+	return new Promise<CognitoUserSession>(function (resolve, reject) {
+		currentUser?.getSession(function (error: any, session: CognitoUserSession) {
+			if (error) {
+				reject(error);
 			} else {
 				resolve(session);
 			}
 		});
-	}).catch(err => {
-		throw err;
+	}).catch(error => {
+		throw error;
 	});
 }
 
-export async function signUpUserWithEmail(
-	username: string,
-	email: string,
-	password: string,
-) {
+const setCognitoUserAttribute = (name: string, value: string) =>
+	new CognitoUserAttribute({
+		Name: name,
+		Value: value,
+	});
+export async function signUpCognitoUser(values: SignUpInput) {
+	return new Promise(function (resolve, reject) {
+		const {password, email, givenName, familyName} = values;
+		const attributeList = [];
+		attributeList.push(setCognitoUserAttribute('email', email));
+		attributeList.push(setCognitoUserAttribute('given_name', givenName));
+		attributeList.push(setCognitoUserAttribute('family_name', familyName));
+
+		userPool.signUp(
+			email,
+			password,
+			attributeList,
+			[],
+			function (error, result) {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(result!);
+				}
+			},
+		);
+	}).catch(error => {
+		throw error;
+	});
+}
+
+export async function signUpUserWithEmail(email: string, password: string) {
 	return new Promise(function (resolve, reject) {
 		const attributeList = [
 			new CognitoUserAttribute({
@@ -65,31 +91,31 @@ export async function signUpUserWithEmail(
 			}),
 		];
 
-		userPool.signUp(username, password, attributeList, [], function (err, res) {
-			if (err) {
-				reject(err);
+		userPool.signUp(email, password, attributeList, [], function (error, res) {
+			if (error) {
+				reject(error);
 			} else {
 				resolve(res);
 			}
 		});
-	}).catch(err => {
-		throw err;
+	}).catch(error => {
+		throw error;
 	});
 }
 
-export async function verifyCode(username: string, code: string) {
+export async function verifyCode(email: string, code: string) {
 	return new Promise(function (resolve, reject) {
-		const cognitoUser = getCognitoUser(username);
+		const cognitoUser = getCognitoUser(email);
 
-		cognitoUser.confirmRegistration(code, true, function (err, result) {
-			if (err) {
-				reject(err);
+		cognitoUser.confirmRegistration(code, true, function (error, result) {
+			if (error) {
+				reject(error);
 			} else {
 				resolve(result);
 			}
 		});
-	}).catch(err => {
-		throw err;
+	}).catch(error => {
+		throw error;
 	});
 }
 
@@ -103,36 +129,38 @@ export async function signInWithEmail(username: string, password: string) {
 
 		currentUser = getCognitoUser(username);
 
-		currentUser.authenticateUser(authenticationDetails, {
-			onSuccess: function (res: any) {
+		currentUser?.authenticateUser(authenticationDetails, {
+			onSuccess(res: CognitoUserSession) {
 				resolve(res);
 			},
-			onFailure: function (err: any) {
-				reject(err);
+			onFailure(error: any) {
+				reject(error);
 			},
 		});
-	}).catch(err => {
-		throw err;
+	}).catch(error => {
+		throw error;
 	});
 }
 
-export function signOut() {
-	if (currentUser) {
-		currentUser.signOut();
-	}
+export async function signOut() {
+	return new Promise(function (resolve, reject) {
+		currentUser?.signOut(() => resolve('success'));
+	}).catch(error => {
+		throw error;
+	});
 }
 
 export async function getAttributes() {
 	return new Promise(function (resolve, reject) {
-		currentUser.getUserAttributes(function (err: any, attributes: any) {
-			if (err) {
-				reject(err);
+		currentUser?.getUserAttributes(function (error: any, attributes: any) {
+			if (error) {
+				reject(error);
 			} else {
 				resolve(attributes);
 			}
 		});
-	}).catch(err => {
-		throw err;
+	}).catch(error => {
+		throw error;
 	});
 }
 
@@ -142,59 +170,59 @@ export async function setAttribute(attribute: any) {
 		const res = new CognitoUserAttribute(attribute);
 		attributeList.push(res);
 
-		currentUser.updateAttributes(attributeList, (err: any, res: any) => {
-			if (err) {
-				reject(err);
+		currentUser?.updateAttributes(attributeList, (error: any, res: any) => {
+			if (error) {
+				reject(error);
 			} else {
 				resolve(res);
 			}
 		});
-	}).catch(err => {
-		throw err;
+	}).catch(error => {
+		throw error;
 	});
 }
 
-export async function sendCode(username: string) {
+export async function sendCode(email: string) {
 	return new Promise(function (resolve, reject) {
-		const cognitoUser = getCognitoUser(username);
+		const cognitoUser = getCognitoUser(email);
 
 		if (!cognitoUser) {
-			reject(`could not find ${username}`);
+			reject(`could not find ${email}`);
 			return;
 		}
 
 		cognitoUser.forgotPassword({
-			onSuccess: function (res) {
+			onSuccess(res) {
 				resolve(res);
 			},
-			onFailure: function (err) {
-				reject(err);
+			onFailure(error) {
+				reject(error);
 			},
 		});
-	}).catch(err => {
-		throw err;
+	}).catch(error => {
+		throw error;
 	});
 }
 
 export async function forgotPassword(
-	username: string,
+	email: string,
 	code: string,
 	password: string,
 ) {
 	return new Promise(function (resolve, reject) {
-		const cognitoUser = getCognitoUser(username);
+		const cognitoUser = getCognitoUser(email);
 
 		if (!cognitoUser) {
-			reject(`could not find ${username}`);
+			reject(`could not find ${email}`);
 			return;
 		}
 
 		cognitoUser.confirmPassword(code, password, {
-			onSuccess: function () {
+			onSuccess() {
 				resolve('password updated');
 			},
-			onFailure: function (err) {
-				reject(err);
+			onFailure(error) {
+				reject(error);
 			},
 		});
 	});
@@ -202,12 +230,12 @@ export async function forgotPassword(
 
 export async function changePassword(oldPassword: string, newPassword: string) {
 	return new Promise(function (resolve, reject) {
-		currentUser.changePassword(
+		currentUser?.changePassword(
 			oldPassword,
 			newPassword,
-			function (err: any, res: any) {
-				if (err) {
-					reject(err);
+			function (error: any, res: any) {
+				if (error) {
+					reject(error);
 				} else {
 					resolve(res);
 				}

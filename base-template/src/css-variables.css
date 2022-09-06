@@ -1,0 +1,163 @@
+:root {
+	--acme-c-grayscale-50: #f6f7f9;
+	--acme-c-grayscale-100: #f1f2f4;
+	--acme-c-grayscale-200: #e0e1e6;
+	--acme-c-grayscale-300: #caccd3;
+	--acme-c-grayscale-400: #9ea1ae;
+	--acme-c-grayscale-500: #686c7d;
+	--acme-c-grayscale-600: #3d4257;
+	--acme-c-grayscale-700: #212836;
+	--acme-c-grayscale-black: #101820;
+	--acme-c-grayscale-white: #ffffff;
+	--acme-c-brand-primary-100: #f1f5f9;
+	--acme-c-brand-primary-200: #d4e5f7;
+	--acme-c-brand-primary-300: #a7cbec;
+	--acme-c-brand-primary-400: #6aa7dc;
+	--acme-c-brand-primary-500: #0067b9;
+	--acme-c-brand-primary-600: #004985;
+	--acme-c-brand-primary-700: #00325c;
+	--acme-c-brand-secondary-200: #e7dcef;
+	--acme-c-brand-secondary-500: #8637ba;
+	--acme-c-system-warning-200: #fdf2ed;
+	--acme-c-system-warning-500: #ee6120;
+	--acme-c-system-error-200: #fdedf2;
+	--acme-c-system-error-500: #c70f49;
+	--acme-c-system-success-200: #def5f1;
+	--acme-c-system-success-500: #009d80;
+	--acme-c-system-information-200: #d4e5f7;
+	--acme-c-system-information-500: #0067b9;
+	--acme-elevation-100: 0px 0px 5px rgba(34, 37, 47, 0.1),
+		0px 5px 5px rgba(34, 37, 47, 0.1);
+	--acme-elevation-200: 0px 0px 5px rgba(34, 37, 47, 0.1),
+		0px 10px 10px rgba(34, 37, 47, 0.1);
+	--acme-elevation-300: 0px 0px 5px rgba(34, 37, 47, 0.1),
+		0px 25px 25px rgba(34, 37, 47, 0.1);
+	--acme-elevation-400: 0px 0px 5px rgba(34, 37, 47, 0.1),
+		0px 35px 35px rgba(34, 37, 47, 0.1);
+	--acme-elevation-500: 0px 0px 5px rgba(34, 37, 47, 0.1),
+		0px 35px 35px rgba(34, 37, 47, 0.1);
+	--acme-radius-100: 2;
+	--acme-radius-200: 2 * 2;
+	--acme-radius-300: 2 * 4;
+	--acme-radius-400: 2 * 8;
+	--acme-font-families-barlow: 'Barlow', sans-serif;
+	--acme-font-families-inter: Inter;
+	--acme-line-heights-0: 48;
+	--acme-line-heights-1: 40;
+	--acme-line-heights-2: 36;
+	--acme-line-heights-3: 32;
+	--acme-line-heights-4: 28;
+	--acme-line-heights-5: 24;
+	--acme-line-heights-6: 20;
+	--acme-line-heights-7: 16;
+	--acme-font-weights-barlow-0: SemiBold;
+	--acme-font-weights-inter-1: Bold;
+	--acme-font-weights-inter-2: Medium;
+	--acme-font-weights-inter-3: Regular;
+	--acme-font-size-0: 12px;
+	--acme-font-size-1: 14px;
+	--acme-font-size-2: 16px;
+	--acme-font-size-3: 20px;
+	--acme-font-size-4: 24px;
+	--acme-font-size-5: 28px;
+	--acme-font-size-6: 32px;
+	--acme-font-size-7: 40px;
+}
+
+/*Header styles*/
+
+.mr-16 {
+	margin-right: 16px;
+}
+
+.mr-40 {
+	margin-right: 40px;
+	float: left;
+}
+
+.mt-24 {
+	margin-top: 24px;
+}
+
+/*
+* disable body scroll when modal is open
+* extra requirements for IOS base devises (overflow: hidden not enough)
+* https://css-tricks.com/prevent-page-scrolling-when-a-modal-is-open/
+*/
+.modal-open {
+	position: fixed;
+	width: 100%;
+	height: 100vh;
+	scroll-behavior: smooth;
+}
+
+/* FOOTER EXTENSION */
+.acme-footer-extension__list {
+	width: 50%;
+	list-style: none;
+	padding: 0;
+	line-height: 1.85;
+}
+
+.acme-footer-extension__list:first-child {
+	margin-bottom: 24px;
+}
+
+@media screen and (min-width: 768px) {
+	.acme-footer-extension__list {
+		width: 25%;
+	}
+
+	.acme-footer-extension__list:first-child {
+		margin-bottom: 0;
+	}
+}
+
+@media screen and (min-width: 1024px) {
+	.acme-footer-extension__list {
+		width: unset;
+	}
+
+	.acme-footer-extension__list:not(:first-child) {
+		margin-left: 100px;
+	}
+}
+
+@media screen and (min-width: 1400px) {
+	.acme-footer-extension__list:not(:first-child) {
+		margin-left: 128px;
+	}
+}
+
+/* FOOTER */
+
+.acme-footer__list {
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+	flex-wrap: wrap;
+}
+
+.acme-footer__list-link {
+	line-height: 2.3;
+	width: 50%;
+}
+
+@media screen and (min-width: 768px) {
+	.acme-footer__list {
+		flex-wrap: nowrap;
+	}
+
+	.acme-footer__list-link {
+		line-height: normal;
+		width: unset;
+	}
+}
+
+@media screen and (min-width: 1024px) {
+	.acme-footer__list {
+	}
+	.acme-footer__list-link:not(:first-child) {
+		margin-left: 40px;
+	}
+}

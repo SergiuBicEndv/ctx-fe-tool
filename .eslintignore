@@ -1,4 +1,5 @@
 dist
 playground-temp
 temp
-
+plugin-*
+base-template

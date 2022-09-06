@@ -1,15 +1,19 @@
-import reportWebVitals from '../report-web-vitals';
-import App from './App';
 import React from 'react';
-import { createRoot } from 'react-dom/client';
+import reportWebVitals from '../report-web-vitals';
+import App from './app';
 import './index.css';
+import ParallelInitializer from './components/providers/parallel-initializer';
+import {createRoot} from 'react-dom/client';
+import {providers} from './utils/providers';
 
 const container = document.querySelector('#root')!;
 const root = createRoot(container);
 
 root.render(
 	<React.StrictMode>
-		<App />
+		<ParallelInitializer providers={providers}>
+			<App />
+		</ParallelInitializer>
 	</React.StrictMode>,
 );
 
