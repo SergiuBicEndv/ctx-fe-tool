@@ -183,12 +183,13 @@ async function init() {
     path.resolve(fileURLToPath(import.meta.url), '..', `plugin-${plugin}`)
 
   const pkg = {}
+  let tempPlugins = plugins || []
 
   //2. copy plugins files
   if (['router', 'auth'].every((value) => features.includes(value)))
-    plugins = plugins.filter((plugin) => plugin !== 'router')
+    tempPlugins = plugins.filter((plugin) => plugin !== 'router')
 
-  for (const plugin of plugins) {
+  for (const plugin of tempPlugins) {
     const pluginPath = getPluginDir(plugin)
     const pluginFiles = fs.readdirSync(pluginPath)
 
@@ -207,12 +208,14 @@ async function init() {
 
   if (
     plugins.length > 0 &&
-    (plugins.includes('redux') || plugins.includes('router'))
+    plugins.some((item) => ['redux', 'router', 'auth'].includes(item))
   ) {
     if (features.includes('tailwind'))
       plugins = plugins.filter((plugin) => plugin !== 'tailwind')
     if (features.includes('router') && !plugins.includes('router'))
-      plugins = [...plugins, 'router']
+      plugins.push('router')
+    if (features.includes('auth') && !plugins.includes('router'))
+      plugins.push('router')
 
     // We can use this pattern if we need to inject code in our template files.
     plop
