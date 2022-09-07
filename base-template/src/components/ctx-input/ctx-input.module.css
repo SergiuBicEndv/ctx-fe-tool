@@ -1,0 +1,16 @@
+.container {
+	display: flex;
+	flex-direction: row;
+	padding-right: 24px;
+}
+
+.inputWrapper {
+	margin: 8px 0;
+}
+
+/*Needs style overwrite*/
+div.inputWrapper div.input:part(input[type]) {
+  display: none !important;
+	/* color: var(--acme-c-grayscale-black) !important;
+	background-color: var(--acme-c-grayscale-100) !important; */
+}

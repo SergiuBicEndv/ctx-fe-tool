@@ -18,10 +18,13 @@ module.exports = (/** @type {import('node-plop').NodePlopAPI} */ plop) => {
 
               if (!providers) return resolve('')
 
-              const components = providers.map(
+              // We dont need to create provider components for all plugins
+              const filteredProviders = providers.filter(plugin => !['tailwind', 'cypress'].includes(plugin))
+
+              const components = filteredProviders.map(
                 (plugin) => `${formatString(plugin)}Provider`
               )
-              const imports = providers.map(
+              const imports = filteredProviders.map(
                 (plugin, index) =>
                   `import ${components[index]} from '../components/providers/${plugin}-provider';`
               )

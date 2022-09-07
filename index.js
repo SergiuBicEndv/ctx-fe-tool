@@ -88,6 +88,7 @@ async function init() {
           name: 'features',
           message: 'Pick the features that you want to include in your project',
           choices: [
+            { title: 'Authentication (AWS Cognito)', value: 'auth' },
             { title: 'Redux', value: 'redux' },
             { title: 'TailwindCSS', value: 'tailwind' },
             { title: 'React Router', value: 'router' },
@@ -133,13 +134,11 @@ async function init() {
     fs.mkdirSync(root, { recursive: true })
   }
 
-  //1. copy base files
-  //2. copy plugins files
-  //3. merge base, plugins files(package.json)
+  //0. Determine the base template
   const baseDir = path.resolve(
     fileURLToPath(import.meta.url),
     '..',
-    `base-template`
+    'base-template'
   )
   //@TODO: the generator should be extracted as a dependency.
   const getCommonFiles = () => {
@@ -153,7 +152,7 @@ async function init() {
       return !negativeVals.includes(f)
     })
 
-    return files;
+    return files
   }
 
   const write = (dir, file, content) => {
@@ -167,7 +166,7 @@ async function init() {
     }
   }
 
-  const commonFiles = getCommonFiles();
+  const commonFiles = getCommonFiles()
 
   for (const file of commonFiles) {
     write(baseDir, file)
@@ -179,11 +178,16 @@ async function init() {
 
   console.log(`\nScaffolding project in ${root}...`)
 
-  // used to dynamically check for different plugins
+  //2. start scaffold of plugins files
   const getPluginDir = (plugin) =>
     path.resolve(fileURLToPath(import.meta.url), '..', `plugin-${plugin}`)
 
   const pkg = {}
+
+  // Auth template already has react router dependencies.
+  if (plugins.includes('auth') && plugins.includes('router')) {
+    plugins = plugins.filter(plugin => plugin !== 'router')
+  }
 
   for (const plugin of plugins) {
     const pluginPath = getPluginDir(plugin)
@@ -195,19 +199,20 @@ async function init() {
 
     const packagePath = path.join(getPluginDir(plugin), `package.json`)
     let temp = {}
+
     if (fs.existsSync(packagePath)) {
       temp = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
     }
+
     pkg.dependencies = { ...pkg.dependencies, ...temp.dependencies }
     pkg.devDependencies = { ...pkg.devDependencies, ...temp.devDependencies }
   }
 
-  if (plugins.length > 0 && (plugins.includes('redux') || plugins.includes('router'))) {
-    // We can use this pattern if we need to inject code in our template files.
-    plop
-      .getGenerator('providers')
-      .runActions({ providers: plugins, targetDir: root })
-  }
+  // We can use this pattern if we need to inject code in our template files.
+  // Recursion issues prevent this logic to be included inside a for loop.
+  plop
+    .getGenerator('providers')
+    .runActions({ providers: plugins, targetDir: root })
 
   // Common package.json contains all scripts and dependencies
   // that should be added by default in all templates
@@ -227,7 +232,10 @@ async function init() {
   }
 
   if (pkgManager === 'yarn') {
-    pkg.scripts = { postinstall: 'yarn dlx @yarnpkg/sdks vscode', ...pkg.scripts }
+    pkg.scripts = {
+      postinstall: 'yarn dlx @yarnpkg/sdks vscode',
+      ...pkg.scripts
+    }
     pkg.engines = { ...pkg.engines, yarn: '>=3.2.3' }
   }
 

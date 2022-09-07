@@ -1,0 +1,55 @@
+{
+  "name": "plugin-auth",
+  "version": "2.0.1",
+  "description": "aws-cognito-react primary goal is to provide user management services for a web App in a scalable serverless way.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dbroadhurst/aws-cognito-react"
+  },
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@adi-ctx/acme-core-components-react": "^0.2.2",
+    "@emotion/react": "^11.9.3",
+    "@emotion/styled": "^11.9.3",
+    "@material-ui/core": "^4.12.4",
+    "@material-ui/icons": "^4.11.3",
+    "@mui/icons-material": "^5.8.4",
+    "@mui/material": "^5.8.6",
+    "@types/material-ui": "^0.21.12",
+    "@types/react-router-dom": "^5.3.3",
+    "@types/yup": "^0.29.14",
+    "amazon-cognito-identity-js": "^5.2.9",
+    "aws-sdk": "^2.1167.0",
+    "formik": "^2.2.9",
+    "react-router-dom": "^6.3.0",
+    "yup": "^0.32.11"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "prettier": "prettier --write '**/*.{js,ts,tsx}' '!**/lib/**' --config .prettierrc --ignore-path .prettierignore",
+    "eslint": "eslint . --ext ts --fix --max-warnings=1"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {}
+}

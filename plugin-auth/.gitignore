@@ -19,13 +19,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.vscode/settings.json
 
 # package manager files
 .pnp.cjs
 .pnp.loader.mjs
 .yarn/cache
 
-# env files
+# env vars
 .env
 .env.*
