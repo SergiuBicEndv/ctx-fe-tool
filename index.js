@@ -178,18 +178,18 @@ async function init() {
 
   console.log(`\nScaffolding project in ${root}...`)
 
-  // used to dynamically check for different plugins
+  //2. start scaffold of plugins files
   const getPluginDir = (plugin) =>
     path.resolve(fileURLToPath(import.meta.url), '..', `plugin-${plugin}`)
 
   const pkg = {}
-  let tempPlugins = plugins || []
 
-  //2. copy plugins files
-  if (['router', 'auth'].every((value) => features.includes(value)))
-    tempPlugins = plugins.filter((plugin) => plugin !== 'router')
+  // Auth template already has react router dependencies.
+  if (plugins.includes('auth') && plugins.includes('router')) {
+    plugins = plugins.filter(plugin => plugin !== 'router')
+  }
 
-  for (const plugin of tempPlugins) {
+  for (const plugin of plugins) {
     const pluginPath = getPluginDir(plugin)
     const pluginFiles = fs.readdirSync(pluginPath)
 
@@ -199,29 +199,20 @@ async function init() {
 
     const packagePath = path.join(getPluginDir(plugin), `package.json`)
     let temp = {}
+
     if (fs.existsSync(packagePath)) {
       temp = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
     }
+
     pkg.dependencies = { ...pkg.dependencies, ...temp.dependencies }
     pkg.devDependencies = { ...pkg.devDependencies, ...temp.devDependencies }
   }
 
-  if (
-    plugins.length > 0 &&
-    plugins.some((item) => ['redux', 'router', 'auth'].includes(item))
-  ) {
-    if (features.includes('tailwind'))
-      plugins = plugins.filter((plugin) => plugin !== 'tailwind')
-    if (features.includes('router') && !plugins.includes('router'))
-      plugins.push('router')
-    if (features.includes('auth') && !plugins.includes('router'))
-      plugins.push('router')
-
-    // We can use this pattern if we need to inject code in our template files.
-    plop
-      .getGenerator('providers')
-      .runActions({ providers: plugins, targetDir: root })
-  }
+  // We can use this pattern if we need to inject code in our template files.
+  // Recursion issues prevent this logic to be included inside a for loop.
+  plop
+    .getGenerator('providers')
+    .runActions({ providers: plugins, targetDir: root })
 
   // Common package.json contains all scripts and dependencies
   // that should be added by default in all templates

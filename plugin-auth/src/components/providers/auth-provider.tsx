@@ -1,4 +1,5 @@
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
+import {BrowserRouter} from 'react-router-dom';
 import {VoidFunction} from '../../common/interfaces/common';
 import {useChangeHandler} from '../../hooks/use-change-handler';
 
@@ -23,11 +24,11 @@ const defaultState: AuthState = {
 	isAuthInProgress: false,
 	isSignInScreen: false,
 	userEmail: '',
-	setAuthenticated: () => {},
-	setJwt: () => {},
-	setAuthInProgress: () => {},
-	setIsSignInScreen: () => {},
-	setUserEmail: () => {},
+	setAuthenticated() {},
+	setJwt() {},
+	setAuthInProgress() {},
+	setIsSignInScreen() {},
+	setUserEmail() {}
 };
 
 export const AuthContext = React.createContext(defaultState);
@@ -37,7 +38,7 @@ const AuthProvider: InitializerComponent<{
 	state: AuthState;
 	children?: React.ReactNode;
 }> = {
-	component: ({children}) => {
+	component({children}) {
 		const [isLoggedIn, setIsLoggedIn] = useState(false);
 		const [isAuthInProgress, setIsLoading] = useState(false);
 		const [jwt, setToken] = useState('');
@@ -50,25 +51,39 @@ const AuthProvider: InitializerComponent<{
 		const setIsSignInScreen = useChangeHandler(isSignInScreen, setIsSignIn);
 		const setUserEmail = useChangeHandler(userEmail, setEmail);
 
+		const contextValue = useMemo(
+			() => ({
+				isAuthenticated: isLoggedIn,
+				isAuthInProgress,
+				jwt,
+				isSignInScreen,
+				userEmail,
+				setAuthenticated,
+				setJwt,
+				setAuthInProgress,
+				setIsSignInScreen,
+				setUserEmail
+			}),
+			[
+				isLoggedIn,
+				isAuthInProgress,
+				jwt,
+				isSignInScreen,
+				userEmail,
+				setAuthenticated,
+				setJwt,
+				setAuthInProgress,
+				setIsSignInScreen,
+				setUserEmail
+			]
+		);
+
 		return (
-			<AuthContext.Provider
-				value={{
-					isAuthenticated: isLoggedIn,
-					isAuthInProgress,
-					jwt,
-					isSignInScreen,
-					userEmail,
-					setAuthenticated,
-					setJwt,
-					setAuthInProgress,
-					setIsSignInScreen,
-					setUserEmail,
-				}}
-			>
-				{children}
+			<AuthContext.Provider value={contextValue}>
+				<BrowserRouter>{children}</BrowserRouter>
 			</AuthContext.Provider>
 		);
-	},
+	}
 };
 
 export default AuthProvider;
